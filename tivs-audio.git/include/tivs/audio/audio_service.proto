@@ -1,0 +1,617 @@
+import "cetty/craft/craft.proto";
+import "cetty/craft/craft_options.proto";
+import "tivs/audio/audio.proto";
+
+package tivs.audio;
+
+option py_generic_services = true;
+option cc_generic_services = true;
+option java_generic_services = true;
+
+option java_package = "com.tuyou.tivs.audio";
+option java_outer_classname = "AudioServiceProto";
+
+message CategoryListRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string       type = 5 [(craft_options).query_param="type"];
+    optional string categoryID = 6 [(craft_options).query_param="category"];
+    optional int32 model = 7 [default = 0, (craft_options).query_param="model"];
+}
+
+message CategoryListResponse {
+    optional cetty.craft.Status status = 1;
+    repeated Category Categories = 5;
+}
+
+message GetCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param="category"];
+    optional int32 start = 6 [(craft_options).query_param="start"];
+    optional int32 num = 7 [(craft_options).query_param="num"];
+}
+
+message GetCategoryResponse {
+    optional cetty.craft.Status status = 1;
+    repeated AudioItem items = 5;
+}
+
+message AddFavouriteRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string user = 5 [(craft_options).query_param="user"];
+    optional string item = 6 [(craft_options).query_param="item"];
+}
+
+message AddFavouriteResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message RemoveFavouriteRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string user = 5 [(craft_options).query_param="user"];
+    optional string item = 6 [(craft_options).query_param="item"];
+}
+
+message RemoveFavouriteResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetFavouriteRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string user = 5 [(craft_options).query_param="user"];
+}
+
+message GetFavouriteResponse {
+    optional cetty.craft.Status status = 1;
+    repeated AudioItem items = 5;
+}
+
+message SubscribeAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string  device = 5 [(craft_options).query_param="device"];
+    optional string album = 6 [(craft_options).query_param="album"];
+    optional string type = 7 [(craft_options).query_param="type"];
+}
+
+message SubscribeAlbumResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message UnsubscribeAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string  device = 5 [(craft_options).query_param="device"];
+    repeated string albums = 6 [(craft_options).query_param="album"];
+    optional string type = 7 [(craft_options).query_param="type"];
+}
+
+message UnsubscribeAlbumResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetSubscribedAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string  device = 5 [(craft_options).query_param="device"];
+    optional string type = 6 [(craft_options).query_param="type"];
+}
+
+message GetSubscribedAlbumResponse {
+    optional cetty.craft.Status status = 1;
+    repeated Album albums = 5;
+}
+
+message GetSubscribingAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string  device = 5 [(craft_options).query_param="device"];
+    optional string type = 6 [(craft_options).query_param="type"];
+}
+
+message GetSubscribingAlbumResponse {
+    optional cetty.craft.Status status = 1;
+    repeated Album albums = 5;
+}
+
+message AddCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional Category category = 5 [(craft_options).mapping_content=true];
+}
+
+message AddCategoryResponse {
+    optional cetty.craft.Status status = 1;
+    optional string categoryID = 5;
+}
+
+message UpdateCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param = "category"];
+    optional Category category = 6 [(craft_options).mapping_content=true];
+}
+
+message UpdateCategoryResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message RemoveCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param = "category"];
+}
+
+message RemoveCategoryResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetCategoryItemsRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param="category"];
+}
+
+message GetCategoryItemsResponse {
+    optional cetty.craft.Status status = 1;
+    repeated CategoryItem items = 5;
+}
+
+message AddCategoryItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param = "category"];
+    optional string column = 6 [(craft_options).query_param = "column"];
+    optional string itemID = 7 [(craft_options).query_param = "item"];
+}
+
+message AddCategoryItemResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message RemoveCategoryItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param = "category"];
+    optional string column = 6 [(craft_options).query_param = "column"];
+    optional string itemID = 7 [(craft_options).query_param = "item"];
+}
+
+message RemoveCategoryItemResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message UpdateCategoryItemSequenceRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string categoryID = 5 [(craft_options).query_param = "category"];
+    optional string column = 6 [(craft_options).query_param = "column"];
+    repeated string items = 7 [(craft_options).mapping_content=true];
+}
+
+message UpdateCategoryItemSequenceResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+// item
+message AddItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional AudioItem item = 5 [(craft_options).mapping_content=true];
+}
+
+message AddItemResponse {
+    optional cetty.craft.Status status = 1;
+    optional string itemID = 5;
+}
+
+message UpdateItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string itemID = 5 [(craft_options).query_param = "item"];
+    optional AudioItem item = 6 [(craft_options).mapping_content=true];
+}
+
+message UpdateItemResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string itemID = 5 [(craft_options).query_param = "item"];
+}
+
+message GetItemResponse {
+    optional cetty.craft.Status status = 1;
+    optional AudioItem item = 5;
+}
+
+message QueryItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string type = 5 [(craft_options).query_param = "type"];
+    optional string name = 6 [(craft_options).query_param = "name"];
+    optional string author = 7 [(craft_options).query_param = "author"];
+    repeated string tags = 8 [(craft_options).query_param = "tag"];
+    optional string album = 9 [(craft_options).query_param = "album"];
+    optional string timestamp = 10 [(craft_options).query_param = "timestamp"];
+    optional string description = 11 [(craft_options).query_param = "description"];
+    optional int32 start = 12 [(craft_options).query_param = "start"];
+    optional int32 count = 13 [(craft_options).query_param = "count"];
+}
+
+message QueryItemResponse {
+    optional cetty.craft.Status status = 1;
+    optional int32 total = 5;
+    repeated AudioItem item = 6;
+}
+
+message RemoveItemRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string itemID = 5 [(craft_options).query_param = "item"];
+}
+
+message RemoveItemResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+// Tag
+message AddTagCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional TagCategory tag_category = 5 [(craft_options).mapping_content = true];
+}
+
+message AddTagCategoryResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message UpdateTagCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string name = 5 [(craft_options).query_param = "name"];
+    repeated string tags = 6 [(craft_options).mapping_content = true];
+}
+
+message UpdateTagCategoryResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message RemoveTagCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    repeated string tag_category_names = 5 [(craft_options).query_param = "categorys"];
+}
+
+message RemoveTagCategoryResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetTagCategoryRequest {
+    optional cetty.craft.Authority authority = 1;
+    repeated string tag_category_names = 5 [(craft_options).query_param = "categorys"];
+}
+
+message GetTagCategoryResponse {
+    optional cetty.craft.Status status = 1;
+    repeated TagCategory tag_categorys = 5;
+}
+
+// Album
+message AddAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional Album album = 5 [(craft_options).mapping_content = true];
+}
+
+message AddAlbumResponse {
+    optional cetty.craft.Status status = 1;
+    optional string id = 5;
+}
+
+message RemoveAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+}
+
+message RemoveAlbumResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message UpdateAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+    optional Album album = 6 [(craft_options).mapping_content = true];
+}
+
+message UpdateAlbumResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+}
+
+message GetAlbumResponse {
+    optional cetty.craft.Status status = 1;
+    optional Album album = 5;
+}
+
+message QueryAlbumRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string type = 5 [(craft_options).query_param = "type"];
+    optional string name = 6 [(craft_options).query_param = "name"];
+    optional bool subscribe = 7 [(craft_options).query_param = "subscribe"];
+    optional int32 start = 8 [(craft_options).query_param = "start"];
+    optional int32 count = 9 [(craft_options).query_param = "count"];
+}
+
+message QueryAlbumResponse {
+    optional cetty.craft.Status status = 1;
+    optional int32 total = 5;
+    optional int32 start = 6;
+    optional int32 count = 7;
+    repeated Album albums = 8;
+}
+
+message GetAlbumItemsRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string album = 5 [(craft_options).query_param = "id"];
+    optional int32 start = 6 [(craft_options).query_param = "start"];
+    optional int32 count = 7 [(craft_options).query_param = "count"];
+}
+
+message GetAlbumItemsResponse {
+    optional cetty.craft.Status status = 1;
+    optional int32 total = 5;
+    optional int32 start = 6;
+    optional int32 count = 7;
+    repeated AudioItem items = 8;
+}
+
+// AlbumMap
+message AddAlbumMapRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional AlbumMap map = 5 [(craft_options).mapping_content = true];
+}
+
+message AddAlbumMapResponse {
+    optional cetty.craft.Status status = 1;
+    optional string id = 5;
+}
+
+message RemoveAlbumMapRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+}
+
+message RemoveAlbumMapResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message UpdateAlbumMapRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+    optional AlbumMap map = 6 [(craft_options).mapping_content = true];
+}
+
+message UpdateAlbumMapResponse {
+    optional cetty.craft.Status status = 1;
+}
+
+message GetAlbumMapRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string id = 5 [(craft_options).query_param = "id"];
+}
+
+message GetAlbumMapResponse {
+    optional cetty.craft.Status status = 1;
+    optional AlbumMap map = 5;
+}
+
+message QueryAlbumMapRequest {
+    optional cetty.craft.Authority authority = 1;
+    optional string type = 5 [(craft_options).query_param = "type"];
+    optional string name = 6 [(craft_options).query_param = "name"];
+    optional bool subscribe = 7 [(craft_options).query_param = "subscribe"];
+    optional int32 start = 8 [(craft_options).query_param = "start"];
+    optional int32 count = 9 [(craft_options).query_param = "count"];
+}
+
+message QueryAlbumMapResponse {
+    optional cetty.craft.Status status = 1;
+    optional int32 total = 5;
+    optional int32 start = 6;
+    optional int32 count = 7;
+    repeated AlbumMap maps = 8;
+}
+
+message GetAlbumMapItemsRequest {
+    optional cetty.craft.Authority authority = 1;
+    repeated string albums = 5 [(craft_options).query_param = "albums"];
+    optional int32 start = 6 [(craft_options).query_param = "start"];
+    optional int32 count = 7 [(craft_options).query_param = "count"];
+}
+
+message GetAlbumMapItemsResponse {
+    optional cetty.craft.Status status = 1;
+    optional int32 total = 5;
+    optional int32 start = 6;
+    optional int32 count = 7;
+    repeated AudioItem items = 8;
+}
+
+service AudioService {
+    option (craft_service_options).path="/xbot/{version}/audio/";
+
+    rpc CategoryList(CategoryListRequest) returns (CategoryListResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="categorylist";
+    }
+
+    rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="category";
+    }
+
+    rpc AddFavourite(AddFavouriteRequest) returns (AddFavouriteResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="favourite";
+    }
+
+    rpc RemoveFavourite(RemoveFavouriteRequest) returns (RemoveFavouriteResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="favourite";
+    }
+
+    rpc GetFavourite(GetFavouriteRequest) returns (GetFavouriteResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="favourite";
+    }
+
+    rpc AddCategory(AddCategoryRequest) returns (AddCategoryResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/category/add";
+    }
+    
+    rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/category/update";
+    }
+
+    rpc RemoveCategory(RemoveCategoryRequest) returns (RemoveCategoryResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/category/remove";
+    }
+
+    rpc GetCategoryItems(GetCategoryItemsRequest) returns (GetCategoryItemsResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/categoryItem";
+    }
+
+    rpc AddCategoryItem(AddCategoryItemRequest) returns (AddCategoryItemResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/category/item/add";
+    }
+
+    rpc UpdateCategoryItemSequence(UpdateCategoryItemSequenceRequest) returns (UpdateCategoryItemSequenceResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/category/item/update/sequence";
+    }
+
+    rpc RemoveCategoryItem(RemoveCategoryItemRequest) returns (RemoveCategoryItemResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/category/item/remove";
+    }
+
+    rpc AddItem(AddItemRequest) returns (AddItemResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/item/add";
+    }
+    
+    rpc UpdateItem(UpdateItemRequest) returns (UpdateItemResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/item/update";
+    }
+
+    rpc GetItem(GetItemRequest) returns (GetItemResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/item";
+    }
+
+    rpc QueryItem(QueryItemRequest) returns (QueryItemResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/item/query";
+    }
+
+    rpc RemoveItem(RemoveItemRequest) returns (RemoveItemResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/item/remove";
+    }
+
+    // Tag
+    rpc AddTagCategory(AddTagCategoryRequest) returns (AddTagCategoryResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/tagcategory/add";
+    }
+
+    rpc RemoveTagCategory(RemoveTagCategoryRequest) returns (RemoveTagCategoryResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/tagcategory/remove";
+    }
+
+    rpc UpdateTagCategory(UpdateTagCategoryRequest) returns (UpdateTagCategoryResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/tagcategory/update";
+    }
+
+    rpc GetTagCategory(GetTagCategoryRequest) returns (GetTagCategoryResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/tagcategory";
+    }
+
+    // subscribe
+    rpc SubscribeAlbum(SubscribeAlbumRequest) returns (SubscribeAlbumResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="subscribes";
+    }
+
+    rpc UnsubscribeAlbum(UnsubscribeAlbumRequest) returns (UnsubscribeAlbumResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="subscribes";
+    }
+
+    rpc GetSubscribedAlbum(GetSubscribedAlbumRequest) returns (GetSubscribedAlbumResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="subscribes";
+    }
+
+    rpc GetSubscribingAlbum(GetSubscribingAlbumRequest) returns (GetSubscribingAlbumResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="subscribings";
+    }
+
+    // Album
+    rpc addAlbum(AddAlbumRequest) returns (AddAlbumResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/album/add";
+    }
+
+    rpc removeAlbum(RemoveAlbumRequest) returns (RemoveAlbumResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/album/remove";
+    }
+
+    rpc updateAlbum(UpdateAlbumRequest) returns (UpdateAlbumResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/album/update";
+    }
+
+    rpc getAlbum(GetAlbumRequest) returns (GetAlbumResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/album";
+    }
+
+    rpc queryAlbum(QueryAlbumRequest) returns (QueryAlbumResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/album/query";
+    }
+
+    rpc GetAlbumItems(GetAlbumItemsRequest) returns (GetAlbumItemsResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/album/items";
+    }
+
+    // AlbumMap
+    rpc addAlbumMap(AddAlbumMapRequest) returns (AddAlbumMapResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/album/map/add";
+    }
+
+    rpc removeAlbumMap(RemoveAlbumMapRequest) returns (RemoveAlbumMapResponse) {
+        option (craft_method_options).method="delete";
+        option (craft_method_options).path="manager/album/map/remove";
+    }
+
+    rpc updateAlbumMap(UpdateAlbumMapRequest) returns (UpdateAlbumMapResponse) {
+        option (craft_method_options).method="post";
+        option (craft_method_options).path="manager/album/map/update";
+    }
+
+    rpc getAlbumMap(GetAlbumMapRequest) returns (GetAlbumMapResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/album/map";
+    }
+
+    rpc queryAlbumMap(QueryAlbumMapRequest) returns (QueryAlbumMapResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="manager/album/map/query";
+    }
+
+    rpc GetAlbumMapItems(GetAlbumMapItemsRequest) returns (GetAlbumMapItemsResponse) {
+        option (craft_method_options).method="get";
+        option (craft_method_options).path="album/map/items";
+    }
+}

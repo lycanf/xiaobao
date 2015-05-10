@@ -1,0 +1,9 @@
+package tivs.audio;
+
+message Mongo {
+    required string host = 1;
+}
+
+message AudioServiceConfig {
+    required Mongo mongo = 1;
+}

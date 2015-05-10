@@ -1,0 +1,110 @@
+package tivs.audio;
+
+option java_package = "com.tuyou.tivs.audio";
+option java_outer_classname = "AudioProto";
+
+message AudioTag {
+    optional string          id = 1;
+    optional string        name = 2;
+    optional string description = 3;
+    optional string        type = 4; // music,news,postcast(blog)
+
+    optional string   parent_id = 9;
+}
+
+message AudioItem {
+    optional string item = 1;        // ID
+    optional string type = 2;        // 类型，music/news/podcast/jokes
+    optional string album_id = 3;    // 专辑ID
+    optional string album = 4;       // 专辑
+    optional string name = 5;        // 名称/标题
+    optional string author = 6;      // 作者/演唱者
+    optional string description = 7; // 描述/文本
+    optional string icon = 8;        // 图标url
+    optional string url = 9;         // 声讯url
+    optional int32 size = 10;        // 声讯文件大小
+    optional int32 duration = 11;    // 时长
+    optional string md5sum = 12;     // 声讯文件的md5sum校验码
+    repeated string tags = 13;       // 标签(组)
+    optional string source = 14;     // 来源
+    optional string timestamp = 15;  // 更新时间
+    optional string map_id = 16;     // AlbumMap的id，非music类型使用此值代替album_id
+    optional string map_name = 17;   // AlbumMap的name，非music类型使用此值代替album
+}
+
+message Timed {
+    optional string unit = 1; // 单位，day/week
+    repeated string days = 2; // 若unit == week, 此字段有效 
+    optional string time = 3; // 发送时间，格式：hh:mm:ss
+}
+
+message PushCategory {
+    optional string type = 1;      // 类型,timed/immediately
+    optional string expiry = 2;    // 过期时间，tsd终端使用，ISO 8601
+    optional string last_time = 3; // 上次推送完成时间
+    optional Timed push_time = 4;  // 下发时间
+}
+
+// 节目
+message Category {
+    optional string category = 1;            // ID
+    optional string type = 2;                // 类型，music/news/podcast/jokes
+    optional string coder = 3;               // 编号
+    optional string name = 4;                // 名称
+    optional string description = 5;         // 描述
+    optional string image = 6;               // 栏目封面图标
+    optional int32 total = 7 [default = 0];  // 总声讯数
+    optional int32 order = 8;                // 排序
+    optional int32 cache = 9 [default = 0];  // 是否缓存
+    optional int32 model = 10 [default = 0]; // 1:推送/0:tsd自动获取
+    optional string start = 11;              // 生效时间
+    optional string end = 12;                // 过期时间
+    optional int32 authority = 13;           // 0:未授权，其它已授权
+    repeated string columns = 14;            // 栏目(组)
+    optional PushCategory push = 15;         // 推送设置
+}
+
+message CategoryItem {
+    optional string category = 1;  // ID
+    optional string column = 2;    // 栏目
+    repeated AudioItem items = 3;  // 声讯
+}
+
+message Favourite {
+    optional string user = 1;
+    repeated string items = 2;
+}
+
+message TagCategory {
+    optional string name = 1;         // 名称
+    optional string description = 2;  // 描述
+    repeated string tags = 3;         // 标签
+}
+
+message Subscribe {
+    optional string user = 1;
+    repeated string albums = 2;
+}
+
+message Album {
+    optional string      type = 1; // 类型, news/podcast/jokes
+    optional string     album = 2; // 专辑ID
+    optional string      name = 3; // 名称
+    optional string cover_url = 4; // 封面
+    optional bool subscribing = 5; // 是否可订阅
+    repeated string      tags = 6; // 标签
+    repeated string     items = 7; // 对应audio的uuid
+}
+
+message AlbumMap {
+    optional string            type = 1; // 类型, news/podcast/jokes
+    optional string              id = 2; // uuid
+    optional string            name = 3; // 名称
+    optional string       cover_url = 4; // 封面
+    optional bool          subscribe= 5; // 是否可以订阅
+    repeated Album           albums = 6; // 对应专辑，element为album的uuid
+    optional int32 subscribed_count = 7; // 订阅数量
+    optional int32       play_count = 8; // 播放次数
+    optional string       timestamp = 9; // 创建时间
+    repeated string            tags =10; // 标签
+}
