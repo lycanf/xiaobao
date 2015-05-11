@@ -35,6 +35,7 @@ import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.voice.R;
 import com.tuyou.tsd.voice.service.interaction.Dialog;
 import com.tuyou.tsd.voice.service.interaction.Speech;
+import com.tuyou.tsd.voice.widget.FLog;
 
 /**
  * 语音引擎接口定义，对内提供统一接口。从而避免因改换第三方SDK带来的接口不一致问题。
@@ -253,12 +254,14 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 
 	void onStateRecognition() {
 		// Play hint sound
+		FLog.v(LOG_TAG,"onStateRecognition playResource");
 		mPlayer.playResource(R.raw.altair, new AudioPlayer.OnCompleteListener() {			
 			@Override
 			void onPlayCompleted() {
-				startRecognition();
+				FLog.v(LOG_TAG,"playResource onPlayCompleted");
 			}
 		});
+		startRecognition();
 	}
 
 	void onStateSearch() {
@@ -458,6 +461,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 
 	void onStartRecording() {
+		FLog.v(LOG_TAG,"onStartRecording");
 		doSendMessage(CommonMessage.VoiceEngine.RECORDING_START, null);
 	}
 
