@@ -11,13 +11,14 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.tuyou.tsd.common.TSDEvent;
+import com.tuyou.tsd.voice.widget.FLog;
 
 public class ErrorFragment extends Fragment {
 	private Activity mParentActivity;
 	private ImageButton mCloseBtn;
 	private TextView mMsgView;
 	private String mErrorText;
-
+	private static final String TAG = "ErrorFragment";
 	@Override
 	public void onAttach(Activity activity) {
 		mParentActivity = activity;
@@ -36,6 +37,7 @@ public class ErrorFragment extends Fragment {
 		mCloseBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				FLog.v(TAG,"sendBroadcast CANCEL_INTERACTION_BY_TP");
 				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
 			}
 		});

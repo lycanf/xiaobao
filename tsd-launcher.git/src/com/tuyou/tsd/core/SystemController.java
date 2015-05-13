@@ -244,6 +244,7 @@ public class SystemController {
 			
 			// Wake up
 			if (action.equals(CommonMessage.VOICE_COMM_WAKEUP)) {
+				Log.v(LOG_TAG,"VOICE_COMM_WAKEUP");
 				onWakeUp();
 			}
 			else if (action.equals(CommonMessage.VOICE_COMM_TAKE_PICTURE)) {

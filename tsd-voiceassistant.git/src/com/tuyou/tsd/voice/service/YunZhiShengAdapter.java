@@ -14,6 +14,7 @@ import cn.yunzhisheng.vui.wakeup.IWakeupListener;
 import cn.yunzhisheng.vui.wakeup.IWakeupOperate;
 
 import com.tuyou.tsd.common.util.LogUtil;
+import com.tuyou.tsd.voice.widget.FLog;
 
 final class YunZhiShengAdapter {
 	private static final String LOG_TAG = "YunZhiShengAdapter";
@@ -107,6 +108,8 @@ final class YunZhiShengAdapter {
 		if (mRecognitionRecordingState) {
 			LogUtil.w(LOG_TAG, "recognition service already ran, ignore.");
 		}
+		
+		LogUtil.d(LOG_TAG, "fq " + "mWakeupRecordingState="+mWakeupRecordingState);
 		if (!mWakeupRecordingState) {
 			// 若唤醒没在录音，则直接开始识别
 			requestStartTalk();
@@ -127,7 +130,22 @@ final class YunZhiShengAdapter {
 		LogUtil.d(LOG_TAG, "Cancel recognition...");
 		mRecognizer.cancel(true);
 	}
-
+	
+	private boolean mCancelRecognitionOnly = false;
+	void cancelRecognition1() {
+		FLog.v(LOG_TAG, "Cancel cancelRecognition1...");
+		mRecognizer.cancel(true);
+		mCancelRecognitionOnly = true;
+	}
+	public boolean isCancelRecognitionOnly(){
+		FLog.v(LOG_TAG, "isCancelRecognitionOnly = "+mCancelRecognitionOnly);
+		return mCancelRecognitionOnly;
+	}
+	public void setCancelRecognitionOnly(boolean set){
+		FLog.v(LOG_TAG, "setCancelRecognitionOnly = "+set);
+		mCancelRecognitionOnly = set;
+	}
+	
 	/**
 	 * 开启唤醒
 	 * @param wakeupInitDone
@@ -166,6 +184,7 @@ final class YunZhiShengAdapter {
 		LogUtil.v(LOG_TAG, "requestStartTalk, mWakeupRecordingState = " + mWakeupRecordingState);
 		if (!mWakeupRecordingState) {
 			mRequestToStartRecog = false;
+			LogUtil.d(LOG_TAG, "fq " + "mRecognizer.start");
 			mRecognizer.start();
 			LogUtil.d(LOG_TAG, "Start to recognize...");
 		}
@@ -179,6 +198,7 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onInitDone() {
 			LogUtil.v(LOG_TAG, "IWakeupListener.onInitDone");
+			LogUtil.d(LOG_TAG, "fq " + "MyWakeUpListener onInitDone");
 			mWakeupInitDone = true;
 			mRequestToStartWakeUp = !requestStartWakeup();
 		}
@@ -221,6 +241,7 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onInitDone() {
 			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onInitDone");
+			LogUtil.d(LOG_TAG, "fq " + "MyRecognizerListener onInitDone");
 			mRecognitionInitDone = true;  
 
 //			public static final String TAG_CONTACT = "Contact"; // 联系人
@@ -255,13 +276,13 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onUserDataCompile() {
 			// TODO Auto-generated method stub
-			
+			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onUserDataCompile");
 		}
 
 		@Override
 		public void onUserDataCompileDone() {
 			// TODO Auto-generated method stub
-			
+			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onUserDataCompileDone");
 		}
 
 		@Override
@@ -317,7 +338,12 @@ final class YunZhiShengAdapter {
 
 		@Override
 		public void onTalkCancel() {
-			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkCancel");
+			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkCancel xxxxxxxxxxxxxxxxxxx "+mCancelRecognitionOnly);
+			if(mCancelRecognitionOnly){
+				FLog.v(LOG_TAG, "mCancelRecognitionOnly **************");
+				requestStartWakeup();
+				return;
+			}
 			mRecognitionState = false;
 			mCallback.onCancelRecognition();
 

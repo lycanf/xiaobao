@@ -259,6 +259,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 			@Override
 			void onPlayCompleted() {
 				FLog.v(LOG_TAG,"playResource onPlayCompleted");
+//				startRecognition();
 			}
 		});
 		startRecognition();
@@ -332,31 +333,50 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	//
 
 	public void startWakeUpListening() {
+		FLog.v(LOG_TAG, "startWakeUpListening");
 		mVoiceAdapter.startWakeUpListening();
 	}
 
 	public void stopWakeUpListening() {
+		FLog.v(LOG_TAG, "stopWakeUpListening");
 		mVoiceAdapter.stopWakeUpListening();
 	}
 
 	public void startRecognition() {
+		FLog.v(LOG_TAG, "startRecognition");
 		mVoiceAdapter.startRecognition();
 	}
 
 	public void stopRecognition() {
+		FLog.v(LOG_TAG, "stopRecognition");
 		mVoiceAdapter.stopRecognition();
 	}
 
 	public void cancelRecognition() {
+		FLog.v(LOG_TAG, "cancelRecognition");
 		mVoiceAdapter.cancelRecognition();
+	}
+	
+	//add by fq
+	public void cancelRecognition1(){
+		FLog.v(LOG_TAG, "cancelRecognition1");
+		mVoiceAdapter.cancelRecognition1();
+	}
+	public boolean isCancelRecognitionOnly(){
+		return mVoiceAdapter.isCancelRecognitionOnly();
+	}
+	public void setCancelRecognitionOnly(boolean set){
+		mVoiceAdapter.setCancelRecognitionOnly(set);
 	}
 
 	public void ttsPlay(String text, String appName, int id,
 			boolean needToNotify) {
+		FLog.v(LOG_TAG, "ttsPlay");
 		ttsPlay(text, appName, id, false, needToNotify);
 	}
 
 	public void ttsPlay(Speech text, boolean needToNotify) {
+		FLog.v(LOG_TAG, "ttsPlay ");
 		ttsPlay(text.getContent(), null, 0, needToNotify);
 	}
 
@@ -366,17 +386,18 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 
 	public void ttsClear() {
+		FLog.v(LOG_TAG, "ttsClear");
 		mTTS.clear();
 	}
 
 	public void ttsPause() {
 		// TODO Auto-generated method stub
-		
+		FLog.v(LOG_TAG, "ttsPause");
 	}
 
 	public void ttsResume() {
 		// TODO Auto-generated method stub
-		
+		FLog.v(LOG_TAG, "ttsResume");
 	}
 
 	//
@@ -391,6 +412,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		// 否则为识别错误重新识别，此时不需要播放提示语。但此时需判断是否需要立即开始识别
 		// 还是等错误提示播完后再开始识别
 		Speech question = a.getQuestion();
+		FLog.v(LOG_TAG, "question="+question);
 		if (question != null) {
 			playSpeech(question);
 		} else {
@@ -420,7 +442,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 			changeState(State.STATE_ERROR);
 		}
 	}
-
+	
 	@Override
 	public void onTtsEnd() {
 		Log.d(LOG_TAG, "onTtsEnd");
@@ -763,7 +785,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		String service = json.optString("service");
 		String code = json.optString("code");
 
-		LogUtil.v(LOG_TAG, "service = " + service + ", code = " + code);
+		LogUtil.v(LOG_TAG, "handleProtocal service = " + service + ", code = " + code);
 
 		// 路线和位置
 		if (service.equals("cn.yunzhisheng.map") &&

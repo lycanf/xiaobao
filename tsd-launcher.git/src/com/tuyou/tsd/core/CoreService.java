@@ -21,6 +21,7 @@ import com.tuyou.tsd.common.TSDShare;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.common.util.TsdHelper;
+import com.tuyou.tsd.launcher.HomeActivity;
 
 /**
  * CoreService是图小宝系统（以下简称系统）最主要的后台进程，在系统整个生命周期内一直存在。

@@ -46,6 +46,7 @@ import com.tuyou.tsd.voice.service.interaction.InteractionParser;
 import com.tuyou.tsd.voice.service.interaction.Jump;
 import com.tuyou.tsd.voice.service.interaction.Jump.HardKeyFunction;
 import com.tuyou.tsd.voice.service.interaction.Scene;
+import com.tuyou.tsd.voice.widget.FLog;
 
 /**
  * 语音助手服务
@@ -245,6 +246,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 					action.equals(TSDEvent.System.HARDKEY4_PRESSED))
 			{
 //				onHardKeyPressed(action);
+				FLog.v(LOG_TAG,"MyBroadcastReceiver onHardKeyPressed");
 			}
 			// 交互过程中收到触屏消息
 			else if (action.equals(TSDEvent.Interaction.FINISH_INTERACTION_BY_TP)) {
@@ -253,11 +255,20 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				}
 			}
 			else if (action.equals(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP)) {
-				boolean gohome = intent.getBooleanExtra("gohome", false);
-				if (mEngine != null) {
-					mEngine.stopDialog(gohome ?
-							ErrorType.ERR_USER_CANCELLED_AND_GO_HOME : ErrorType.ERR_USER_CANCELLED);
+				if(intent.getBooleanExtra("continue",false)){
+					FLog.v(LOG_TAG," CANCEL_INTERACTION_BY_TP continue");
+					if (mEngine != null) {
+						mEngine.cancelRecognition1();
+					}
+				}else{
+					boolean gohome = intent.getBooleanExtra("gohome", false);
+					FLog.v(LOG_TAG, "257 CANCEL_INTERACTION_BY_TP gohome "+gohome);
+					if (mEngine != null) {
+						mEngine.stopDialog(gohome ?
+								ErrorType.ERR_USER_CANCELLED_AND_GO_HOME : ErrorType.ERR_USER_CANCELLED);
+					}
 				}
+
 			}
 			// POI Search Result
 			else if (action.equals(TSDEvent.Navigation.POI_SEARCH_RESULT)) {
@@ -348,14 +359,23 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	public void onWakeUp(String word) {
 		Log.d(LOG_TAG, "onWakeUp: " + word);
 		if (word.equals(WAKE_UP_COMMAND_1)) {
+			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_1");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_WAKEUP);
 			sendBroadcast(resultIntent);
 		} else if (word.equals(WAKE_UP_COMMAND_2)) {
+			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_2");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_TAKE_PICTURE);
 			sendBroadcast(resultIntent);
 		} else if (word.equals(WAKE_UP_COMMAND_3)) {
+			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_3");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_SHUT_UP);
 			sendBroadcast(resultIntent);
+		}
+		
+		if(isCancelRecognitionOnly()){
+			Log.d(LOG_TAG, "onWakeUp: setCancelRecognitionOnly");
+			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+			setCancelRecognitionOnly(false);
 		}
 	}
 
@@ -412,6 +432,18 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		LogUtil.d(LOG_TAG, "service initialized, total used " + (System.currentTimeMillis() - start) + " ms.");
 	}
 
+	public boolean isCancelRecognitionOnly(){
+		if (mEngine != null) {
+			return mEngine.isCancelRecognitionOnly();
+		}
+		return false;
+	}
+	public void setCancelRecognitionOnly(boolean set){
+		if (mEngine != null) {
+			mEngine.setCancelRecognitionOnly(set);
+		}
+	}
+	
 	private boolean checkResourceDir() {
 		boolean r = true;
 
@@ -711,7 +743,8 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				currentDialog = dialogs[i];
 				mEngine.startDialog(dialogs[i]);
 
-				LogUtil.d(LOG_TAG, "挂起线程，等待对话交互结果...");
+				LogUtil.d(LOG_TAG, "挂起线程，等待对话交互结果..."+i+"/"+dialogs.length);
+				FLog.v(LOG_TAG,"currentDialog="+currentDialog.getExpectedKeyword());
 				synchronized(lock) {
 					try { lock.wait(); } catch (InterruptedException e) {}
 				}
@@ -880,12 +913,14 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 
 		private void invokeHardKeyAction(HardKeyFunction action) {
 			// TODO:
+			FLog.v(LOG_TAG,"invokeHardKeyAction");
 		}
 
 		private void invokeSuccessfulAction(SuccessfulAction action,
 				String answerType, String answer, String extra)
 		{
 			String str = action.getAction();
+			FLog.v(LOG_TAG,"invokeSuccessfulAction="+str);
 			if (str.equals("return")) {
 				// Send the result
 				notifyInteractionFinish(answerType, answer, extra);
@@ -910,6 +945,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				String reason, String description)
 		{
 			String str = action.getAction();
+			FLog.v(LOG_TAG,"invokeFailedAction="+str);
 			if (str.equals("return")) {
 				// Send the result
 				notifyInteractionError(reason, description);
@@ -925,7 +961,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 			}					
 		}
 
-		private void continueToInvokeInteraction() {
+		public void continueToInvokeInteraction() {
 			LogUtil.d(LOG_TAG, "恢复挂起线程继续执行交互.");
 			synchronized(lock) {
 				lock.notify();

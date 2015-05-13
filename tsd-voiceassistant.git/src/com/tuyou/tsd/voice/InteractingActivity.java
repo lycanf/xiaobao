@@ -19,12 +19,14 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import com.tuyou.tsd.common.CommonMessage;
 import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.voice.service.VoiceAssistant;
+import com.tuyou.tsd.voice.widget.FLog;
 
 public class InteractingActivity extends Activity {
 	private static final String TAG = "InteractingActivity";
@@ -53,6 +55,7 @@ public class InteractingActivity extends Activity {
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(TSDEvent.Interaction.FINISH_ACTIVITY);
+		filter.addAction(TSDEvent.System.HARDKEY4_PRESSED);
 		registerReceiver(mReceiver, filter);
 	}
 
@@ -194,6 +197,7 @@ public class InteractingActivity extends Activity {
 //				break;
 
 			case CommonMessage.VoiceEngine.RECORDING_START:
+				LogUtil.d(TAG, "fq " + "RECORDING_START startAnimation");
 				((RecordFragment)mRecordFragment).startAnimation();
 				break;
 
@@ -237,6 +241,21 @@ public class InteractingActivity extends Activity {
 			}
 		}
 
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// TODO Auto-generated method stub
+		Log.v(TAG,"keycode = "+keyCode);
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_F4:
+			FLog.v(TAG,"HARDKEY4_PRESSED");
+			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+			break;
+		default:
+				
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {

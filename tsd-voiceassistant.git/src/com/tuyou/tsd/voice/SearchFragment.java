@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.widget.ArrayListAdapter;
+import com.tuyou.tsd.voice.widget.FLog;
 
 public class SearchFragment extends Fragment {
 	private Activity mParentActivity;
@@ -31,6 +32,7 @@ public class SearchFragment extends Fragment {
 	private ListView mListView;
 	private SearchResultAdapter mAdapter;
 	private ArrayList<ResultItem> mObjects = new ArrayList<ResultItem>();
+	private static final String TAG = "SearchFragment";
 
 	@Override
 	public void onAttach(Activity activity) {
@@ -41,6 +43,7 @@ public class SearchFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		FLog.v(TAG,"onCreateView");
 		View view = inflater.inflate(R.layout.search_fragment, container, false);
 
 		mListView = (ListView) view.findViewById(R.id.search_result_listView);
@@ -52,9 +55,11 @@ public class SearchFragment extends Fragment {
 		mCloseBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				FLog.v(TAG,"sendBroadcast CANCEL_INTERACTION_BY_TP");
 				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
 			}
 		});
+		mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP).putExtra("continue", true));
 		return view;
 	}
 

@@ -43,6 +43,9 @@ public class HomeActivity extends BaseActivity {
 //	private boolean mAccState; // true -- on; false -- off.
 //	private int mClickedTimes;
 
+	//fq
+	public static final boolean fq_debug = true;
+	
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		
 		@Override
@@ -70,6 +73,7 @@ public class HomeActivity extends BaseActivity {
 			String action = intent.getAction();
 
 			if (action.equals(CommonMessage.VOICE_COMM_WAKEUP)) {
+				Log.v(TAG,"VOICE_COMM_WAKEUP");
 				onWakeUp();
 			}
 
@@ -152,6 +156,7 @@ public class HomeActivity extends BaseActivity {
 	}
 
 	private void onWakeUp() {
+		Log.v(TAG,"onWakeUp");
 		mFaceView.setImageResource(R.drawable.xiaobao_wakeup);
 	}
 
@@ -197,6 +202,7 @@ public class HomeActivity extends BaseActivity {
 				if (mCoreService != null) {
 					mCoreService.changeMode(WorkingMode.MODE_AUDIO, ContentType.TYPE_MUSIC);
 				}
+
 				break;
 			case R.id.home_news_btn:
 				if (mCoreService != null) {
