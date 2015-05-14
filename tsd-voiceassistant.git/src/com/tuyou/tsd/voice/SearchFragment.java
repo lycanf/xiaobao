@@ -65,6 +65,9 @@ public class SearchFragment extends Fragment {
 
 	void setResultData(String result) {
 		Log.d("SearchFragment", "setResultData: " + result);
+		if(null != mObjects){
+			mObjects.clear();
+		}
 		try {
 			JSONObject obj = new JSONObject(result);
 			String type = obj.getString("type");

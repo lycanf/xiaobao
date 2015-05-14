@@ -340,7 +340,7 @@ final class YunZhiShengAdapter {
 		public void onTalkCancel() {
 			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkCancel xxxxxxxxxxxxxxxxxxx "+mCancelRecognitionOnly);
 			if(mCancelRecognitionOnly){
-				FLog.v(LOG_TAG, "mCancelRecognitionOnly **************");
+				FLog.v(LOG_TAG, "onTalkCancel **************");
 				requestStartWakeup();
 				return;
 			}

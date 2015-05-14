@@ -36,6 +36,7 @@ import com.tuyou.tsd.common.TSDConst;
 import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
+import com.tuyou.tsd.voice.InteractingActivity;
 import com.tuyou.tsd.voice.R;
 import com.tuyou.tsd.voice.service.VoiceEngine.AnswerType;
 import com.tuyou.tsd.voice.service.VoiceEngine.ErrorType;
@@ -75,6 +76,10 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	private static Vector<Scene> mSceneList = new Vector<Scene>();
 
 	private boolean mInitialized;
+	
+	//add by fq
+	public static final int CMD_SET_CANCEL = 1000;
+	public static final String CMD_EXECUTEINTERACTION = "CMD_EXECUTEINTERACTION";
 	
 	private enum State {
 		STATE_NONE,
@@ -130,6 +135,10 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		@Override
 		public void handleMessage(Message msg) {
 			switch(msg.what) {
+			case VoiceAssistant.CMD_SET_CANCEL:
+				FLog.v(LOG_TAG, "CMD_SET_CANCEL");
+				setCancelRecognitionOnly(false);
+				break;
 			case CommonMessage.VoiceEngine.REGISTER_CLIENT:
 				LogUtil.v(LOG_TAG, "Got the message VoiceEngine.REGISTER_CLIENT");
 				if (mEngine != null) {
@@ -237,6 +246,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 			}
 			// 交互消息
 			else if (action.equals(TSDEvent.Interaction.RUN_INTERACTION)) {
+				FLog.v(LOG_TAG,"broadcast RUN_INTERACTION");
 				executeInteraction(intent.getStringExtra("template"), true);
 			}
 			// 交互过程中收到硬按键消息
@@ -282,9 +292,14 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				}
 			}
 			else if (action.equals(TSDEvent.System.ACC_OFF)) {
+				sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+				setCancelRecognitionOnly(false);
 				if (mEngine != null) {
 					mEngine.stopWakeUpListening();
 				}
+			}else if(action.equals(CMD_EXECUTEINTERACTION)){
+				FLog.v(LOG_TAG, "CMD_EXECUTEINTERACTION");
+				executeInteraction("GENERIC", true);
 			}
 		}
 	}
@@ -373,9 +388,10 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		}
 		
 		if(isCancelRecognitionOnly()){
-			Log.d(LOG_TAG, "onWakeUp: setCancelRecognitionOnly");
+			Log.d(LOG_TAG, "setCancelRecognitionOnly");
 			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
 			setCancelRecognitionOnly(false);
+			InteractingActivity.BACK_TO_LISTENING = true;
 		}
 	}
 
@@ -427,6 +443,8 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 
 		filter.addAction(TSDEvent.Navigation.POI_SEARCH_RESULT);
 		
+		filter.addAction(CMD_EXECUTEINTERACTION);
+		
 		mReceiver = new MyBroadcastReceiver();
 		registerReceiver(mReceiver, filter);
 		LogUtil.d(LOG_TAG, "service initialized, total used " + (System.currentTimeMillis() - start) + " ms.");
@@ -438,7 +456,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		}
 		return false;
 	}
-	public void setCancelRecognitionOnly(boolean set){
+	public static void setCancelRecognitionOnly(boolean set){
 		if (mEngine != null) {
 			mEngine.setCancelRecognitionOnly(set);
 		}
@@ -555,6 +573,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	 * @param eventMsg
 	 */
 	private void executeInteraction(String eventMsg, boolean isLocal) {
+		FLog.v(LOG_TAG,"executeInteraction isLocal"+isLocal);
 		Scene scene = null;
 		if (isLocal) {
 			if (mInteractionMap != null) {

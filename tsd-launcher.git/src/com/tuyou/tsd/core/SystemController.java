@@ -469,6 +469,7 @@ public class SystemController {
 	}
 
 	private void onWakeUp() {
+		LogUtil.v(LOG_TAG, "onWakeUp mCurrentState="+mService.mCurrentState+" mCurrentMode="+mService.mCurrentMode);
 		if ((mService.mCurrentState == ServiceState.STATE_RESUME ||
 				 mService.mCurrentState == ServiceState.STATE_START) &&
 				 mService.mCurrentMode != WorkingMode.MODE_INTERACTING)
@@ -870,6 +871,7 @@ public class SystemController {
 	 * 点亮屏幕
 	 */
 	private void turnOnScreen() {
+		LogUtil.v(LOG_TAG, "turnOnScreen!");
 		if (mCurrentScreenBrightness == 0) {
 			mCurrentScreenBrightness = 100;
 			HelperUtil.setScreenBrightness(mService, mCurrentScreenBrightness);

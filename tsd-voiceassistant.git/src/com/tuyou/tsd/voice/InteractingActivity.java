@@ -42,6 +42,14 @@ public class InteractingActivity extends Activity {
 	//
 	private static Messenger mVoiceService = null;
 	private final Messenger mMessenger = new Messenger(new VoiceEngineMsgHandler());
+	
+	//add by fq
+	public volatile static boolean BACK_TO_LISTENING = false;
+	//from SystemController
+	// Interaction template
+	private static final String TEMPLATE_NAME = "template";
+	private static final String TEMPLATE_WAKEUP = "GENERIC";
+	private static final String TEMPLATE_DEST_QUERY = "DEST_QUERY";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -250,7 +258,16 @@ public class InteractingActivity extends Activity {
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_F4:
 			FLog.v(TAG,"HARDKEY4_PRESSED");
+			try {
+				// Register self for reply message
+				Message msg = Message.obtain(null, VoiceAssistant.CMD_SET_CANCEL);
+				msg.replyTo = mMessenger;
+				mVoiceService.send(msg);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+			BACK_TO_LISTENING = true;
 			break;
 		default:
 				
@@ -267,7 +284,17 @@ public class InteractingActivity extends Activity {
 			LogUtil.d(TAG, "BroadcastReceiver.onReceive, action: " + action);
 
 			if (action.equals(TSDEvent.Interaction.FINISH_ACTIVITY)) {
-				HelperUtil.finishActivity(InteractingActivity.this, android.R.anim.fade_in, android.R.anim.fade_out);
+				LogUtil.d(TAG, "BroadcastReceiver.onReceive,BACK_TO_LISTENING="+BACK_TO_LISTENING);
+				if(BACK_TO_LISTENING){
+					BACK_TO_LISTENING = false;
+					transFragment(mRecordFragment);
+					sendBroadcast(new Intent(CommonMessage.TTS_CLEAR));
+					try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
+					Intent i = new Intent(VoiceAssistant.CMD_EXECUTEINTERACTION);
+					sendBroadcast(i);
+				}else{
+					HelperUtil.finishActivity(InteractingActivity.this, android.R.anim.fade_in, android.R.anim.fade_out);
+				}
 			}
 		}
 	};
