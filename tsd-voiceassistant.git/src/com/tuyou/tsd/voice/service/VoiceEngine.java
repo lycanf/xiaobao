@@ -36,6 +36,7 @@ import com.tuyou.tsd.voice.R;
 import com.tuyou.tsd.voice.service.interaction.Dialog;
 import com.tuyou.tsd.voice.service.interaction.Speech;
 import com.tuyou.tsd.voice.widget.FLog;
+import com.tuyou.tsd.voice.widget.FText;
 
 /**
  * 语音引擎接口定义，对内提供统一接口。从而避免因改换第三方SDK带来的接口不一致问题。
@@ -823,6 +824,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		String code = json.optString("code");
 
 		LogUtil.v(LOG_TAG, "handleProtocal service = " + service + ", code = " + code);
+		LogUtil.v(LOG_TAG, "handleProtocal json = " + json.toString());
 
 		// 路线和位置
 		if (service.equals("cn.yunzhisheng.map") &&
@@ -865,6 +867,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 				 code.equals("SEARCH_RANDOM") || code.equals("SEARCH_BILLBOARD")))
 		{
 			JSONObject obj = json.getJSONObject("semantic").getJSONObject("intent");
+			FLog.v(LOG_TAG,"music = "+obj.toString());
 			if (obj != null) {
 				r = new SemanticProtocolResult(AnswerType.MUSIC.value, new String[]{
 						obj.optString("song"),
@@ -926,6 +929,8 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 				String author = params[1];
 				String genre = params[2];
 				String result = JsonOA2.getInstance(mContext).queryAudio(name, author, genre);
+				FLog.v(LOG_TAG, "MusicSearchTask name="+name+" author="+author+" genre="+genre);
+				FLog.v(LOG_TAG, "MusicSearchTask result="+result);
 				if (result != null && !result.matches(".+errorCode.+")) {
 					try {
 						JSONObject data = new JSONObject(result);
@@ -945,6 +950,10 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
+				}else{
+					Bundle data = new Bundle();
+					data.putString("result", FText.NO_SONG_FOUND);
+					doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
 				}
 			}
 			return null;

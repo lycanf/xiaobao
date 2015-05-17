@@ -1,5 +1,8 @@
 package com.tuyou.tsd.voice;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -26,7 +29,10 @@ import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.voice.service.VoiceAssistant;
+import com.tuyou.tsd.voice.service.VoiceEngine.ErrorType;
+import com.tuyou.tsd.voice.service.VoiceEngine.State;
 import com.tuyou.tsd.voice.widget.FLog;
+import com.tuyou.tsd.voice.widget.FText;
 
 public class InteractingActivity extends Activity {
 	private static final String TAG = "InteractingActivity";
@@ -223,6 +229,20 @@ public class InteractingActivity extends Activity {
 			case CommonMessage.VoiceEngine.RECOGNITION_COMPLETE:
 				String tempResult = msg.getData().getString("result");
 				Log.v(TAG,"RECOGNITION_COMPLETE = "+tempResult);
+				if(tempResult !=null && tempResult.equals(FText.NO_SONG_FOUND)){
+					Log.v(TAG,"RECOGNITION_COMPLETE = no song found");
+					Timer timer;
+					TimerTask timeoutTask = new TimerTask() {
+						@Override
+						public void run() {
+							sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+//							BACK_TO_LISTENING = true;
+						}
+					};
+					timer = new Timer("TimeoutTask", true);
+					timer.schedule(timeoutTask, 1500);
+				}
+				
 				((RecognitionFragment)mRecogFragment).setResultText(tempResult);
 				playBing();
 				break;
