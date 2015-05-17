@@ -221,7 +221,9 @@ public class InteractingActivity extends Activity {
 				break;
 
 			case CommonMessage.VoiceEngine.RECOGNITION_COMPLETE:
-				((RecognitionFragment)mRecogFragment).setResultText(msg.getData().getString("result"));
+				String tempResult = msg.getData().getString("result");
+				Log.v(TAG,"RECOGNITION_COMPLETE = "+tempResult);
+				((RecognitionFragment)mRecogFragment).setResultText(tempResult);
 				playBing();
 				break;
 

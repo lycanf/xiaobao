@@ -501,6 +501,38 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_START, null);
 	}
 
+	void onFinishRecognitionError(String result) {
+		Bundle data = new Bundle();
+		data.putString("result", result);
+		doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
+		
+		LogUtil.w(LOG_TAG, "onFinishRecognitionError : go back");
+		try {
+			if (timer != null) {
+				Log.v(LOG_TAG, "onFinishRecognitionError cancel the pervious timer...");
+				timer.cancel();
+				timer = null;
+			}
+			// 为了防止后续没有分析结果到达，这里需要设一个超时机制防止交互无法结束
+			TimerTask timeoutTask = new TimerTask() {
+				@Override
+				public void run() {
+					LogUtil.w(LOG_TAG, "Time is out, cancel the recognition.");
+					mVoiceAdapter.cancelRecognition();
+
+					mCurrentDialogError = ErrorType.ERR_NO_MATCH_ANSWER;
+					changeState(State.STATE_ERROR);
+				}
+			};
+			timer = new Timer("TimeoutTask", true);
+			timer.schedule(timeoutTask, 1500);
+			Log.v(LOG_TAG, "onFinishRecognitionError a stop timer...");
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String mRecognitionResult = null;
 	void onFinishRecognition(String result, boolean isSemantic) {
 		LogUtil.d(LOG_TAG, "onFinishRecognition, result = " + result + ", isSemantic = " + isSemantic);
 
@@ -518,13 +550,14 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 			boolean finish = false, success = false, gotoSearch = false;
 			if (!isSemantic) {	// phonetic
 				// Send the result back to service
-				Bundle data = new Bundle();
-				data.putString("result", result);
-				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
+//				Bundle data = new Bundle();
+//				data.putString("result", result);
+//				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
+				mRecognitionResult = result;
 
 				if ( !checkCommandAnswer(result) ) {
 					LogUtil.d(LOG_TAG, "wait for the following analysed result...");
-					try {
+					/*try {
 						if (timer != null) {
 							Log.v(LOG_TAG, "cancel the pervious timer...");
 							timer.cancel();
@@ -546,12 +579,16 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 						Log.v(LOG_TAG, "schedule a new timer...");
 					} catch (IllegalStateException e) {
 						e.printStackTrace();
-					}
+					}*/
 				} else {
 					finish = true;
 					success = true;
 				}
 			} else {	// semantic
+				Bundle data = new Bundle();
+				data.putString("result", mRecognitionResult);
+				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
+				
 				if ( !checkSemanticAnswer(result) ) {
 					mCurrentDialogError = ErrorType.ERR_NO_MATCH_ANSWER;
 					finish = true;
