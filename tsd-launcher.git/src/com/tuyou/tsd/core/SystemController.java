@@ -327,6 +327,7 @@ public class SystemController {
 
 	public void onSystemInit() {
 		// Start InitSettings application
+		LogUtil.v(LOG_TAG, "onSystemInit WeclomeActivity");
 		HelperUtil.startActivityWithFadeInAnim(mService, TSDComponent.INIT_SETTINGS_PACKAGE, TSDComponent.INIT_SETTINGS_MAIN_ACTIVITY);
 	}
 

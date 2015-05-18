@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -41,6 +42,7 @@ public class InitFinishFragment extends BaseFragment {
 			@Override
 			public void onClick(View v) {
 				// 把系统是否初始化完成标记为完成/存入设备共享文件
+				Log.v("fq","InitFinishFragment editor="+editor);
 				if (editor != null) {
 					editor.putString("system_init", true + "");
 					editor.putString("ssid",

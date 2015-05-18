@@ -363,6 +363,12 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		FLog.v(LOG_TAG, "cancelRecognition1");
 		mVoiceAdapter.cancelRecognition1();
 	}
+	public void cancelRecognition2() {
+		FLog.v(LOG_TAG, "cancelRecognition2");
+		mVoiceAdapter.setRecognitionRecordingState(false);
+		mVoiceAdapter.cancelRecognition();
+	}
+	
 	public boolean isCancelRecognitionOnly(){
 		return mVoiceAdapter.isCancelRecognitionOnly();
 	}
@@ -521,7 +527,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 					LogUtil.w(LOG_TAG, "Time is out, cancel the recognition.");
 					mVoiceAdapter.cancelRecognition();
 
-					mCurrentDialogError = ErrorType.ERR_NO_MATCH_ANSWER;
+					mCurrentDialogError = ErrorType.ERR_NET;
 					changeState(State.STATE_ERROR);
 				}
 			};
@@ -534,7 +540,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 	
 	private String mRecognitionResult = null;
-	void onFinishRecognition(String result, boolean isSemantic) {
+	public void onFinishRecognition(String result, boolean isSemantic) {
 		LogUtil.d(LOG_TAG, "onFinishRecognition, result = " + result + ", isSemantic = " + isSemantic);
 
 		// 若当前无交互则忽略

@@ -80,6 +80,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	//add by fq
 	public static final int CMD_SET_CANCEL = 1000;
 	public static final String CMD_EXECUTEINTERACTION = "CMD_EXECUTEINTERACTION";
+	public static final String CMD_FINISHRECOGNITIONN = "CMD_FINISHRECOGNITIONN";
 	
 	private enum State {
 		STATE_NONE,
@@ -300,6 +301,12 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 			}else if(action.equals(CMD_EXECUTEINTERACTION)){
 				FLog.v(LOG_TAG, "CMD_EXECUTEINTERACTION");
 				executeInteraction("GENERIC", true);
+			}else if(action.equals(CMD_FINISHRECOGNITIONN)){
+				if (mEngine != null) {
+					FLog.v(LOG_TAG, "CMD_FINISHRECOGNITIONN");
+					mEngine.cancelRecognition2();
+					mEngine.onFinishRecognition("", false);
+				}
 			}
 		}
 	}
@@ -444,6 +451,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		filter.addAction(TSDEvent.Navigation.POI_SEARCH_RESULT);
 		
 		filter.addAction(CMD_EXECUTEINTERACTION);
+		filter.addAction(CMD_FINISHRECOGNITIONN);
 		
 		mReceiver = new MyBroadcastReceiver();
 		registerReceiver(mReceiver, filter);

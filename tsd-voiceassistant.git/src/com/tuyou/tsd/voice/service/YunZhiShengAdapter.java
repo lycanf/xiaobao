@@ -75,10 +75,15 @@ final class YunZhiShengAdapter {
 		// 释放语音识别句柄
 		mRecognizer.release();
 	}
+	
+	public void setRecognitionRecordingState(boolean b){
+		mRecognitionRecordingState = b;
+	}
 
 	void startWakeUpListening() {
 		LogUtil.d(LOG_TAG, "YunZhiShengAdapter.startWakeUpListening, recogRecordingState=" + mRecognitionRecordingState +
 				", mRecogState=" + mRecognitionState);
+		
 		if (mWakeupRecordingState) {
 			LogUtil.w(LOG_TAG, "wake up service already ran, ignore.");
 			return;
@@ -98,6 +103,7 @@ final class YunZhiShengAdapter {
 	}
 
 	void stopWakeUpListening() {
+		LogUtil.d(LOG_TAG, "YunZhiShengAdapter.stopWakeUpListening mWakeupRecordingState="+mWakeupRecordingState);
 		if (mWakeupRecordingState) {
 			mWakeupOperate.stopWakeup();
 		}

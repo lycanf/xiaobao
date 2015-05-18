@@ -14,6 +14,7 @@ import com.tuyou.tsd.common.CommonMessage;
 import com.tuyou.tsd.common.TSDComponent;
 import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
+import com.tuyou.tsd.voice.service.VoiceAssistant;
 import com.tuyou.tsd.voice.widget.MicrophoneView;
 
 public class RecordFragment extends Fragment {
@@ -42,9 +43,12 @@ public class RecordFragment extends Fragment {
 		mCloseButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+//				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+				mParentActivity.sendBroadcast(new Intent(VoiceAssistant.CMD_FINISHRECOGNITIONN));
+				mCloseButton.setClickable(false);
 			}
 		});
+		mCloseButton.setClickable(true);
 
 		mHomeButton = (Button) view.findViewById(R.id.record_home_btn);
 		mHomeButton.setOnClickListener(new View.OnClickListener() {

@@ -105,6 +105,7 @@ public class HomeActivity extends BaseActivity {
 		Log.v(TAG, "onResume");
 		super.onResume();
 		registerReceiver(mReceiver, mIntentFilter);
+		isStartedIntent = false;
 	}
 
 	@Override
@@ -193,10 +194,16 @@ public class HomeActivity extends BaseActivity {
 		
 	}
 
+	private volatile boolean isStartedIntent = false;
 	private MyOnClickListener mClickListener = new MyOnClickListener();
 	private class MyOnClickListener implements View.OnClickListener {
 		@Override
 		public void onClick(View v) {
+			LogUtil.w(TAG, "MyOnClickListener isStartedIntent="+isStartedIntent);
+			if(isStartedIntent){
+				return;
+			}
+			isStartedIntent = true;
 			switch (v.getId()) {
 			case R.id.home_music_btn:
 				if (mCoreService != null) {
