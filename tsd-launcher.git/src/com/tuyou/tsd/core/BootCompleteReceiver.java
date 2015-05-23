@@ -16,8 +16,8 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
-//			LogUtil.d("BootCompleteReceiver", "启动 CoreService...");
-//			context.startService(new Intent(context, CoreService.class));
+			LogUtil.d("BootCompleteReceiver", "启动 CoreService...");
+			context.startService(new Intent(context, CoreService.class));
 		}
 	}
 

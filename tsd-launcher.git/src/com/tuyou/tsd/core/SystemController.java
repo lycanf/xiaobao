@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -327,7 +328,6 @@ public class SystemController {
 
 	public void onSystemInit() {
 		// Start InitSettings application
-		LogUtil.v(LOG_TAG, "onSystemInit WeclomeActivity");
 		HelperUtil.startActivityWithFadeInAnim(mService, TSDComponent.INIT_SETTINGS_PACKAGE, TSDComponent.INIT_SETTINGS_MAIN_ACTIVITY);
 	}
 
@@ -470,11 +470,11 @@ public class SystemController {
 	}
 
 	private void onWakeUp() {
-		LogUtil.v(LOG_TAG, "onWakeUp mCurrentState="+mService.mCurrentState+" mCurrentMode="+mService.mCurrentMode);
 		if ((mService.mCurrentState == ServiceState.STATE_RESUME ||
 				 mService.mCurrentState == ServiceState.STATE_START) &&
 				 mService.mCurrentMode != WorkingMode.MODE_INTERACTING)
 		{
+			LogUtil.d(LOG_TAG, "onWakeUp, prepare to start an interaction.");
 			turnOnScreen();
 
 			// 唤醒时若有播报内容则先清除（唤醒优先于播报）
@@ -484,6 +484,9 @@ public class SystemController {
 			Intent intent = new Intent(TSDEvent.Interaction.RUN_INTERACTION);
 			intent.putExtra(TEMPLATE_NAME, TEMPLATE_WAKEUP);
 			mService.sendBroadcast(intent);
+		} else {
+			LogUtil.w(LOG_TAG, "onWakeUp, ignore wake up message. current state=" + mService.mCurrentState +
+					", current mode=" + mService.mCurrentMode);
 		}
 	}
 
@@ -554,9 +557,11 @@ public class SystemController {
 		stopIdleCheckThread();
 
 		if (type == ContentType.TYPE_MAP) {
-			HelperUtil.startActivityWithFadeInAnim(mService,
-					TSDComponent.NAVIGATOR_PACKAGE,
-					TSDComponent.NAVIGATOR_MAIN_ACTIVITY);
+//			HelperUtil.startActivityWithFadeInAnim(mService,
+//					TSDComponent.NAVIGATOR_PACKAGE,
+//					TSDComponent.NAVIGATOR_MAIN_ACTIVITY);
+			//启动导航改为发送广播由导航自己启动
+			mService.sendBroadcast(new Intent("com.tuyou.tsd.start_nav"));
 		}
 
 //		uploadDeviceState();
@@ -593,8 +598,18 @@ public class SystemController {
 	}
 
 	private void onPictureHasBeenTaken() {
-		LogUtil.d(LOG_TAG, "onPictureHasBeenTaken");
-//		Toast.makeText(this, "拍照完毕.", Toast.LENGTH_SHORT).show();
+	    LogUtil.d(LOG_TAG, "onPictureHasBeenTaken");
+	    Toast.makeText(mService, "拍照完毕.", Toast.LENGTH_SHORT).show();
+
+        MediaPlayer player = MediaPlayer.create(mService, R.raw.photo);
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+                mp = null;
+            }
+        });
+	    player.start();
 
 		// 拍照完毕后切换回standby模式
 		mService.changeMode(WorkingMode.MODE_STANDBY, ContentType.TYPE_NONE);
@@ -805,6 +820,8 @@ public class SystemController {
 	
 		// Audio
 		mService.startService(new Intent(TSDComponent.AUDIO_SERVICE));
+/*		mService.startService(new Intent(TSDComponent.PODCAST_SERVICE));
+		mService.startService(new Intent(TSDComponent.NEWS_SERVICE));*/
 		LogUtil.v(LOG_TAG, "Start Audio service.");	
 		
 		// navigation
@@ -872,7 +889,6 @@ public class SystemController {
 	 * 点亮屏幕
 	 */
 	private void turnOnScreen() {
-		LogUtil.v(LOG_TAG, "turnOnScreen!");
 		if (mCurrentScreenBrightness == 0) {
 			mCurrentScreenBrightness = 100;
 			HelperUtil.setScreenBrightness(mService, mCurrentScreenBrightness);

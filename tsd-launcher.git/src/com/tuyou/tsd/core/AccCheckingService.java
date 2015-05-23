@@ -44,6 +44,7 @@ public class AccCheckingService extends Service {
 		Intent intent = new Intent();
 		intent.setAction(isOn ? TSDEvent.System.ACC_ON : TSDEvent.System.ACC_OFF);
 		sendBroadcast(intent);
+		LogUtil.v(TAG, "AccCheckingService.java::broadcastAccState=> 广播[" + (isOn? "点火" : "熄火") + "]信号.");
 	}
 
 	/**

@@ -43,9 +43,6 @@ public class HomeActivity extends BaseActivity {
 //	private boolean mAccState; // true -- on; false -- off.
 //	private int mClickedTimes;
 
-	//fq
-	public static final boolean fq_debug = true;
-	
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		
 		@Override
@@ -59,8 +56,12 @@ public class HomeActivity extends BaseActivity {
 			Log.v(TAG, "onServiceConnected.");
 			mCoreService = ((CoreService.LocalBinder)service).getService();
 			if (mCoreService.isLoadingCompleted() && mLoadingDialog != null) {
+				LogUtil.v(TAG, "dismiss the loading diaLogUtil.");
 				mLoadingDialog.dismiss();
 				mLoadingDialog = null;
+			} else {
+				LogUtil.w(TAG, "ignore dismiss dialog, mCoreService.isLoadingCompleted()=" + mCoreService.isLoadingCompleted()
+						+ ", mLoadingDialog=" + mLoadingDialog);
 			}
 		}
 	};
@@ -73,7 +74,6 @@ public class HomeActivity extends BaseActivity {
 			String action = intent.getAction();
 
 			if (action.equals(CommonMessage.VOICE_COMM_WAKEUP)) {
-				Log.v(TAG,"VOICE_COMM_WAKEUP");
 				onWakeUp();
 			}
 
@@ -95,6 +95,11 @@ public class HomeActivity extends BaseActivity {
 		Log.v(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home_activity_2);
+
+		mIntentFilter = new IntentFilter();
+		mIntentFilter.addAction(TSDEvent.System.LOADING_COMPLETE);
+		mIntentFilter.addAction(CommonMessage.VOICE_COMM_WAKEUP);
+
 		initView();
 		initService();
 		showLoadingDialog();
@@ -105,7 +110,7 @@ public class HomeActivity extends BaseActivity {
 		Log.v(TAG, "onResume");
 		super.onResume();
 		registerReceiver(mReceiver, mIntentFilter);
-		isStartedIntent = false;
+		bindService(new Intent(this, CoreService.class), mServiceConnection, Service.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -114,12 +119,12 @@ public class HomeActivity extends BaseActivity {
 		super.onPause();
 
 		unregisterReceiver(mReceiver);
+		unbindService(mServiceConnection);
 	}
 
 	@Override
 	protected void onDestroy() {
 		Log.v(TAG, "onDestroy");
-		unbindService(mServiceConnection);
 		super.onDestroy();
 	}
 
@@ -148,16 +153,10 @@ public class HomeActivity extends BaseActivity {
 	
 
 	private void initService() {
-//		startService(new Intent(this, CoreService.class));
-		bindService(new Intent(this, CoreService.class), mServiceConnection, Service.BIND_AUTO_CREATE);
-
-		mIntentFilter = new IntentFilter();
-		mIntentFilter.addAction(TSDEvent.System.LOADING_COMPLETE);
-		mIntentFilter.addAction(CommonMessage.VOICE_COMM_WAKEUP);
+		startService(new Intent(this, CoreService.class));
 	}
 
 	private void onWakeUp() {
-		Log.v(TAG,"onWakeUp");
 		mFaceView.setImageResource(R.drawable.xiaobao_wakeup);
 	}
 
@@ -194,22 +193,15 @@ public class HomeActivity extends BaseActivity {
 		
 	}
 
-	private volatile boolean isStartedIntent = false;
 	private MyOnClickListener mClickListener = new MyOnClickListener();
 	private class MyOnClickListener implements View.OnClickListener {
 		@Override
 		public void onClick(View v) {
-			LogUtil.w(TAG, "MyOnClickListener isStartedIntent="+isStartedIntent);
-			if(isStartedIntent){
-				return;
-			}
-			isStartedIntent = true;
 			switch (v.getId()) {
 			case R.id.home_music_btn:
 				if (mCoreService != null) {
 					mCoreService.changeMode(WorkingMode.MODE_AUDIO, ContentType.TYPE_MUSIC);
 				}
-
 				break;
 			case R.id.home_news_btn:
 				if (mCoreService != null) {

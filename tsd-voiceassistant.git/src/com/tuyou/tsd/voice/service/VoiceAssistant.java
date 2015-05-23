@@ -47,7 +47,6 @@ import com.tuyou.tsd.voice.service.interaction.InteractionParser;
 import com.tuyou.tsd.voice.service.interaction.Jump;
 import com.tuyou.tsd.voice.service.interaction.Jump.HardKeyFunction;
 import com.tuyou.tsd.voice.service.interaction.Scene;
-import com.tuyou.tsd.voice.widget.FLog;
 
 /**
  * 语音助手服务
@@ -137,7 +136,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		public void handleMessage(Message msg) {
 			switch(msg.what) {
 			case VoiceAssistant.CMD_SET_CANCEL:
-				FLog.v(LOG_TAG, "CMD_SET_CANCEL");
+				LogUtil.v(LOG_TAG,"CMD_SET_CANCEL");
 				setCancelRecognitionOnly(false);
 				break;
 			case CommonMessage.VoiceEngine.REGISTER_CLIENT:
@@ -247,7 +246,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 			}
 			// 交互消息
 			else if (action.equals(TSDEvent.Interaction.RUN_INTERACTION)) {
-				FLog.v(LOG_TAG,"broadcast RUN_INTERACTION");
 				executeInteraction(intent.getStringExtra("template"), true);
 			}
 			// 交互过程中收到硬按键消息
@@ -257,7 +255,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 					action.equals(TSDEvent.System.HARDKEY4_PRESSED))
 			{
 //				onHardKeyPressed(action);
-				FLog.v(LOG_TAG,"MyBroadcastReceiver onHardKeyPressed");
 			}
 			// 交互过程中收到触屏消息
 			else if (action.equals(TSDEvent.Interaction.FINISH_INTERACTION_BY_TP)) {
@@ -266,20 +263,24 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				}
 			}
 			else if (action.equals(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP)) {
+				/*boolean gohome = intent.getBooleanExtra("gohome", false);
+				if (mEngine != null) {
+					mEngine.stopDialog(gohome ?
+							ErrorType.ERR_USER_CANCELLED_AND_GO_HOME : ErrorType.ERR_USER_CANCELLED);
+				}*/
 				if(intent.getBooleanExtra("continue",false)){
-					FLog.v(LOG_TAG," CANCEL_INTERACTION_BY_TP continue");
+					LogUtil.v(LOG_TAG," CANCEL_INTERACTION_BY_TP continue");
 					if (mEngine != null) {
 						mEngine.cancelRecognition1();
 					}
 				}else{
 					boolean gohome = intent.getBooleanExtra("gohome", false);
-					FLog.v(LOG_TAG, "257 CANCEL_INTERACTION_BY_TP gohome "+gohome);
+					LogUtil.v(LOG_TAG, "257 CANCEL_INTERACTION_BY_TP gohome "+gohome);
 					if (mEngine != null) {
 						mEngine.stopDialog(gohome ?
 								ErrorType.ERR_USER_CANCELLED_AND_GO_HOME : ErrorType.ERR_USER_CANCELLED);
 					}
 				}
-
 			}
 			// POI Search Result
 			else if (action.equals(TSDEvent.Navigation.POI_SEARCH_RESULT)) {
@@ -293,19 +294,21 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				}
 			}
 			else if (action.equals(TSDEvent.System.ACC_OFF)) {
-				sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+				InteractingActivity.BACK_TO_LISTENING = false;
 				setCancelRecognitionOnly(false);
+				sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
 				if (mEngine != null) {
 					mEngine.stopWakeUpListening();
 				}
+				
 			}else if(action.equals(CMD_EXECUTEINTERACTION)){
-				FLog.v(LOG_TAG, "CMD_EXECUTEINTERACTION");
+				LogUtil.v(LOG_TAG, "CMD_EXECUTEINTERACTION");
 				executeInteraction("GENERIC", true);
 			}else if(action.equals(CMD_FINISHRECOGNITIONN)){
 				if (mEngine != null) {
-					FLog.v(LOG_TAG, "CMD_FINISHRECOGNITIONN");
+					LogUtil.v(LOG_TAG, "CMD_FINISHRECOGNITIONN");
 					mEngine.cancelRecognition2();
-					mEngine.onFinishRecognition("", false);
+					mEngine.onFinishRecognitionError("", ErrorType.ERR_USER_CANCELLED);
 				}
 			}
 		}
@@ -381,24 +384,37 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	public void onWakeUp(String word) {
 		Log.d(LOG_TAG, "onWakeUp: " + word);
 		if (word.equals(WAKE_UP_COMMAND_1)) {
-			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_1");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_WAKEUP);
 			sendBroadcast(resultIntent);
+			//add by fq
+			if(isCancelRecognitionOnly()){
+				Log.d(LOG_TAG, "onWakeUp: setCancelRecognitionOnly");
+				sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+				setCancelRecognitionOnly(false);
+				InteractingActivity.BACK_TO_LISTENING = true;
+			}
+			
 		} else if (word.equals(WAKE_UP_COMMAND_2)) {
-			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_2");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_TAKE_PICTURE);
 			sendBroadcast(resultIntent);
 		} else if (word.equals(WAKE_UP_COMMAND_3)) {
-			Log.d(LOG_TAG, "onWakeUp:WAKE_UP_COMMAND_3");
 			Intent resultIntent = new Intent(CommonMessage.VOICE_COMM_SHUT_UP);
 			sendBroadcast(resultIntent);
 		}
 		
-		if(isCancelRecognitionOnly()){
-			Log.d(LOG_TAG, "setCancelRecognitionOnly");
-			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
-			setCancelRecognitionOnly(false);
-			InteractingActivity.BACK_TO_LISTENING = true;
+
+	}
+	
+	//add by fq
+	public boolean isCancelRecognitionOnly(){
+		if (mEngine != null) {
+			return mEngine.isCancelRecognitionOnly();
+		}
+		return false;
+	}
+	public static void setCancelRecognitionOnly(boolean set){
+		if (mEngine != null) {
+			mEngine.setCancelRecognitionOnly(set);
 		}
 	}
 
@@ -449,7 +465,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		filter.addAction(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP);
 
 		filter.addAction(TSDEvent.Navigation.POI_SEARCH_RESULT);
-		
 		filter.addAction(CMD_EXECUTEINTERACTION);
 		filter.addAction(CMD_FINISHRECOGNITIONN);
 		
@@ -458,18 +473,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 		LogUtil.d(LOG_TAG, "service initialized, total used " + (System.currentTimeMillis() - start) + " ms.");
 	}
 
-	public boolean isCancelRecognitionOnly(){
-		if (mEngine != null) {
-			return mEngine.isCancelRecognitionOnly();
-		}
-		return false;
-	}
-	public static void setCancelRecognitionOnly(boolean set){
-		if (mEngine != null) {
-			mEngine.setCancelRecognitionOnly(set);
-		}
-	}
-	
 	private boolean checkResourceDir() {
 		boolean r = true;
 
@@ -581,7 +584,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	 * @param eventMsg
 	 */
 	private void executeInteraction(String eventMsg, boolean isLocal) {
-		FLog.v(LOG_TAG,"executeInteraction isLocal"+isLocal);
 		Scene scene = null;
 		if (isLocal) {
 			if (mInteractionMap != null) {
@@ -620,6 +622,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 	    	if (module.equals(CommonMessage.PUSH_MESSAGE_TYPE_INTERACTION)) {
 				content = json.getJSONObject("content").toString();
 
+				LogUtil.w(LOG_TAG,"start VOICE_ASSISTANT_PACKAGE");
 				HelperUtil.startActivity(this, TSDComponent.VOICE_ASSISTANT_PACKAGE, TSDComponent.INTERACTION_ACTIVITY);
 	    		executeInteraction(content, false);
 	    	}
@@ -770,8 +773,7 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				currentDialog = dialogs[i];
 				mEngine.startDialog(dialogs[i]);
 
-				LogUtil.d(LOG_TAG, "挂起线程，等待对话交互结果..."+i+"/"+dialogs.length);
-				FLog.v(LOG_TAG,"currentDialog="+currentDialog.getExpectedKeyword());
+				LogUtil.d(LOG_TAG, "挂起线程，等待对话交互结果...");
 				synchronized(lock) {
 					try { lock.wait(); } catch (InterruptedException e) {}
 				}
@@ -940,14 +942,12 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 
 		private void invokeHardKeyAction(HardKeyFunction action) {
 			// TODO:
-			FLog.v(LOG_TAG,"invokeHardKeyAction");
 		}
 
 		private void invokeSuccessfulAction(SuccessfulAction action,
 				String answerType, String answer, String extra)
 		{
 			String str = action.getAction();
-			FLog.v(LOG_TAG,"invokeSuccessfulAction="+str);
 			if (str.equals("return")) {
 				// Send the result
 				notifyInteractionFinish(answerType, answer, extra);
@@ -972,7 +972,6 @@ public class VoiceAssistant extends Service implements VoiceEngine.WakeUpCallbac
 				String reason, String description)
 		{
 			String str = action.getAction();
-			FLog.v(LOG_TAG,"invokeFailedAction="+str);
 			if (str.equals("return")) {
 				// Send the result
 				notifyInteractionError(reason, description);

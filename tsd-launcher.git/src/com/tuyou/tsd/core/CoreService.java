@@ -21,7 +21,6 @@ import com.tuyou.tsd.common.TSDShare;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.common.util.TsdHelper;
-import com.tuyou.tsd.launcher.HomeActivity;
 
 /**
  * CoreService是图小宝系统（以下简称系统）最主要的后台进程，在系统整个生命周期内一直存在。
@@ -203,6 +202,7 @@ public class CoreService extends Service {
     		}
     		// ACC on
     		else if (action.equals(TSDEvent.System.ACC_ON)) {
+    		    LogUtil.v(LOG_TAG, "CoreService.java::onReceive=> [点火触发提示]");
     			Toast.makeText(context, "点火触发.", Toast.LENGTH_SHORT).show();
 
     		    if (mCurrentState == ServiceState.STATE_START ||
@@ -216,6 +216,7 @@ public class CoreService extends Service {
     		}
     		// ACC off
     		else if (action.equals(TSDEvent.System.ACC_OFF)) {
+    		    LogUtil.v(LOG_TAG, "CoreService.java::onReceive=> [熄火触发提示]");
     			Toast.makeText(context, "熄火触发.", Toast.LENGTH_SHORT).show();
 
     			// 若当前系统正在运行，则休眠
@@ -561,12 +562,13 @@ public class CoreService extends Service {
 		SharedPreferences pref = HelperUtil.getCommonPreference(this,
 				TSDComponent.CORE_SERVICE_PACKAGE,
 				TSDShare.SYSTEM_SETTING_PREFERENCES);
+//		boolean r = pref != null ? Boolean.parseBoolean(pref.getString("system_init", "false")) : false;
 		boolean r = false;
 		if(pref != null){
 			r = Boolean.parseBoolean(pref.getString("system_init", "false"));
 			pref.edit().putString("system_init", "true").commit();
 		}
-		LogUtil.v(LOG_TAG, "checkFirstInitFinished, return " + r+"  pref="+pref);
+		LogUtil.v(LOG_TAG, "checkFirstInitFinished, return " + r);
 		return r;
 	}
 

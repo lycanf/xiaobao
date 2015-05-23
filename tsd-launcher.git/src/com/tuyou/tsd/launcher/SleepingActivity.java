@@ -76,7 +76,6 @@ public class SleepingActivity extends BaseActivity {
 			String action = intent.getAction();
 
 			if (action.equals(CommonMessage.VOICE_COMM_WAKEUP)) {
-				LogUtil.d(TAG, "VOICE_COMM_WAKEUP");
 				onWakeUp();
 			}
 			else if (action.equals(TSDEvent.System.WEATHER_UPDATED)) {

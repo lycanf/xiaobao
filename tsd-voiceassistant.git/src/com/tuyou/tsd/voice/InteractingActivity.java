@@ -1,8 +1,5 @@
 package com.tuyou.tsd.voice;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -29,15 +26,17 @@ import com.tuyou.tsd.common.TSDEvent;
 import com.tuyou.tsd.common.util.HelperUtil;
 import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.voice.service.VoiceAssistant;
-import com.tuyou.tsd.voice.service.VoiceEngine.ErrorType;
-import com.tuyou.tsd.voice.service.VoiceEngine.State;
-import com.tuyou.tsd.voice.widget.FLog;
-import com.tuyou.tsd.voice.widget.FText;
 
 public class InteractingActivity extends Activity {
 	private static final String TAG = "InteractingActivity";
 
 	private Fragment mRecordFragment, mRecogFragment, mSearchFragment, mErrorFragment;
+	enum FRAGMENT_TYPE {
+		RECORD,
+		RECOG,
+		SEARCH,
+		ERROR
+	}
 //	private ListView mResultListView;
 //	private DestinationAdapter mDestAdapter;
 
@@ -48,15 +47,10 @@ public class InteractingActivity extends Activity {
 	//
 	private static Messenger mVoiceService = null;
 	private final Messenger mMessenger = new Messenger(new VoiceEngineMsgHandler());
-	
+
 	//add by fq
 	public volatile static boolean BACK_TO_LISTENING = false;
-	//from SystemController
-	// Interaction template
-	private static final String TEMPLATE_NAME = "template";
-	private static final String TEMPLATE_WAKEUP = "GENERIC";
-	private static final String TEMPLATE_DEST_QUERY = "DEST_QUERY";
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate...");
@@ -73,6 +67,33 @@ public class InteractingActivity extends Activity {
 		registerReceiver(mReceiver, filter);
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// TODO Auto-generated method stub
+		Log.v(TAG,"keycode = "+keyCode);
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_F4:
+			if(mFragmentType!=FRAGMENT_TYPE.SEARCH){
+				Log.v(TAG,"onKeyDown not in search view");
+				break;
+			}
+			try {
+				// Register self for reply message
+				Message msg = Message.obtain(null, VoiceAssistant.CMD_SET_CANCEL);
+				msg.replyTo = mMessenger;
+				mVoiceService.send(msg);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+			BACK_TO_LISTENING = true;
+			break;
+		default:
+				
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+	
 	@Override
 	protected void onResume() {
 		Log.d(TAG, "onResume...");
@@ -140,7 +161,35 @@ public class InteractingActivity extends Activity {
 		player.start();
 	}
 
-	private void transFragment(Fragment fragment) {
+//	private void transFragment(Fragment fragment) {
+//		FragmentTransaction transaction = getFragmentManager().beginTransaction();
+//		transaction.replace(R.id.fragment_container, fragment);
+//		transaction.commit();
+//	}
+	
+/*	RECORD,
+	RECOG,
+	SEARCH,
+	ERROR*/
+	private FRAGMENT_TYPE mFragmentType = FRAGMENT_TYPE.RECORD;
+	private void transFragment(FRAGMENT_TYPE type) {
+		Log.v(TAG,"transFragment FRAGMENT_TYPE "+type);
+		Fragment fragment = null;
+		mFragmentType = type;
+		switch(type){
+		case RECORD:
+			fragment = mRecordFragment;
+			break;
+		case RECOG:
+			fragment = mRecogFragment;
+			break;
+		case SEARCH:
+			fragment = mSearchFragment;
+			break;
+		case ERROR:
+			fragment = mErrorFragment;
+			break;
+		}
 		FragmentTransaction transaction = getFragmentManager().beginTransaction();
 		transaction.replace(R.id.fragment_container, fragment);
 		transaction.commit();
@@ -211,7 +260,6 @@ public class InteractingActivity extends Activity {
 //				break;
 
 			case CommonMessage.VoiceEngine.RECORDING_START:
-				LogUtil.d(TAG, "fq " + "RECORDING_START startAnimation");
 				((RecordFragment)mRecordFragment).startAnimation();
 				break;
 
@@ -223,27 +271,16 @@ public class InteractingActivity extends Activity {
 				break;
 
 			case CommonMessage.VoiceEngine.RECOGNITION_START:
-				transFragment(mRecogFragment);
+//				transFragment(mRecogFragment);
+				transFragment(FRAGMENT_TYPE.RECOG);
 				break;
 
 			case CommonMessage.VoiceEngine.RECOGNITION_COMPLETE:
+//				((RecognitionFragment)mRecogFragment).setResultText(msg.getData().getString("result"));
 				String tempResult = msg.getData().getString("result");
 				Log.v(TAG,"RECOGNITION_COMPLETE = "+tempResult);
-				if(tempResult !=null && tempResult.equals(FText.NO_SONG_FOUND)){
-					Log.v(TAG,"RECOGNITION_COMPLETE = no song found");
-					Timer timer;
-					TimerTask timeoutTask = new TimerTask() {
-						@Override
-						public void run() {
-							sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
-//							BACK_TO_LISTENING = true;
-						}
-					};
-					timer = new Timer("TimeoutTask", true);
-					timer.schedule(timeoutTask, 1500);
-				}
-				
 				((RecognitionFragment)mRecogFragment).setResultText(tempResult);
+				
 				playBing();
 				break;
 
@@ -251,7 +288,8 @@ public class InteractingActivity extends Activity {
 			case CommonMessage.VoiceEngine.RECOGNITION_ERROR:
 				String error = msg.getData().getString("result");
 				if ( !error.equals("用户取消") ) {
-					transFragment(mErrorFragment);
+//					transFragment(mErrorFragment);
+					transFragment(FRAGMENT_TYPE.ERROR);
 					((ErrorFragment)mErrorFragment).setErrorText(error);
 					playBing();
 				}
@@ -262,7 +300,8 @@ public class InteractingActivity extends Activity {
 				break;
 
 			case CommonMessage.VoiceEngine.SEARCH_END:
-				transFragment(mSearchFragment);
+//				transFragment(mSearchFragment);
+				transFragment(FRAGMENT_TYPE.SEARCH);
 				((SearchFragment)mSearchFragment).setResultData(msg.getData().getString("result"));
 				break;
 
@@ -272,30 +311,6 @@ public class InteractingActivity extends Activity {
 		}
 
 	}
-	
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		// TODO Auto-generated method stub
-		Log.v(TAG,"keycode = "+keyCode);
-		switch (keyCode) {
-		case KeyEvent.KEYCODE_F4:
-			FLog.v(TAG,"HARDKEY4_PRESSED");
-			try {
-				// Register self for reply message
-				Message msg = Message.obtain(null, VoiceAssistant.CMD_SET_CANCEL);
-				msg.replyTo = mMessenger;
-				mVoiceService.send(msg);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-			sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
-			BACK_TO_LISTENING = true;
-			break;
-		default:
-				
-		}
-		return super.onKeyDown(keyCode, event);
-	}
 
 	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 		
@@ -304,19 +319,18 @@ public class InteractingActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
 			LogUtil.d(TAG, "BroadcastReceiver.onReceive, action: " + action);
+			LogUtil.d(TAG, "BroadcastReceiver.onReceive, BACK_TO_LISTENING: " + BACK_TO_LISTENING);
 
-			if (action.equals(TSDEvent.Interaction.FINISH_ACTIVITY)) {
-				LogUtil.d(TAG, "BroadcastReceiver.onReceive,BACK_TO_LISTENING="+BACK_TO_LISTENING);
-				if(BACK_TO_LISTENING){
-					BACK_TO_LISTENING = false;
-					transFragment(mRecordFragment);
-					sendBroadcast(new Intent(CommonMessage.TTS_CLEAR));
-					try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
-					Intent i = new Intent(VoiceAssistant.CMD_EXECUTEINTERACTION);
-					sendBroadcast(i);
-				}else{
-					HelperUtil.finishActivity(InteractingActivity.this, android.R.anim.fade_in, android.R.anim.fade_out);
-				}
+			if(BACK_TO_LISTENING){
+				BACK_TO_LISTENING = false;
+//				transFragment(mRecordFragment);
+				transFragment(FRAGMENT_TYPE.RECOG);
+				sendBroadcast(new Intent(CommonMessage.TTS_CLEAR));
+				try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
+				Intent i = new Intent(VoiceAssistant.CMD_EXECUTEINTERACTION);
+				sendBroadcast(i);
+			}else{
+				HelperUtil.finishActivity(InteractingActivity.this, android.R.anim.fade_in, android.R.anim.fade_out);
 			}
 		}
 	};

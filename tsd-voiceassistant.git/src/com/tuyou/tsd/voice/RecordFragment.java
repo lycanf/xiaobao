@@ -54,8 +54,8 @@ public class RecordFragment extends Fragment {
 		mHomeButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP)
-													.putExtra("gohome", true));
+//				mParentActivity.sendBroadcast(new Intent(TSDEvent.Interaction.CANCEL_INTERACTION_BY_TP));
+				mParentActivity.sendBroadcast(new Intent(VoiceAssistant.CMD_FINISHRECOGNITIONN));
 				HelperUtil.startActivityWithFadeInAnim(getActivity(), TSDComponent.LAUNCHER_PACKAGE, TSDComponent.HOME_ACTIVITY);
 			}
 		});

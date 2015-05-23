@@ -35,8 +35,6 @@ import com.tuyou.tsd.common.util.LogUtil;
 import com.tuyou.tsd.voice.R;
 import com.tuyou.tsd.voice.service.interaction.Dialog;
 import com.tuyou.tsd.voice.service.interaction.Speech;
-import com.tuyou.tsd.voice.widget.FLog;
-import com.tuyou.tsd.voice.widget.FText;
 
 /**
  * 语音引擎接口定义，对内提供统一接口。从而避免因改换第三方SDK带来的接口不一致问题。
@@ -255,12 +253,12 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 
 	void onStateRecognition() {
 		// Play hint sound
-		FLog.v(LOG_TAG,"onStateRecognition playResource");
-		mPlayer.playResource(R.raw.altair, new AudioPlayer.OnCompleteListener() {			
+		final long time_consuming_start = System.currentTimeMillis();
+
+		mPlayer.playResource(R.raw.altair, new AudioPlayer.OnCompleteListener(){
 			@Override
-			void onPlayCompleted() {
-				FLog.v(LOG_TAG,"playResource onPlayCompleted");
-//				startRecognition();
+			void onPlayCompleted(){
+			    LogUtil.d(LOG_TAG, "VoiceEngine.java::onStateRecognition=> 播放声音耗时=>[" + (System.currentTimeMillis()-time_consuming_start) + "] ms.");			    
 			}
 		});
 		startRecognition();
@@ -333,57 +331,49 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	// Public interfaces
 	//
 
-	public void startWakeUpListening() {
-		FLog.v(LOG_TAG, "startWakeUpListening");
-		mVoiceAdapter.startWakeUpListening();
-	}
-
-	public void stopWakeUpListening() {
-		FLog.v(LOG_TAG, "stopWakeUpListening");
-		mVoiceAdapter.stopWakeUpListening();
-	}
-
-	public void startRecognition() {
-		FLog.v(LOG_TAG, "startRecognition");
-		mVoiceAdapter.startRecognition();
-	}
-
-	public void stopRecognition() {
-		FLog.v(LOG_TAG, "stopRecognition");
-		mVoiceAdapter.stopRecognition();
-	}
-
-	public void cancelRecognition() {
-		FLog.v(LOG_TAG, "cancelRecognition");
-		mVoiceAdapter.cancelRecognition();
-	}
-	
 	//add by fq
 	public void cancelRecognition1(){
-		FLog.v(LOG_TAG, "cancelRecognition1");
+		LogUtil.v(LOG_TAG, "cancelRecognition1");
 		mVoiceAdapter.cancelRecognition1();
 	}
 	public void cancelRecognition2() {
-		FLog.v(LOG_TAG, "cancelRecognition2");
+		LogUtil.v(LOG_TAG, "cancelRecognition2");
 		mVoiceAdapter.setRecognitionRecordingState(false);
 		mVoiceAdapter.cancelRecognition();
 	}
-	
 	public boolean isCancelRecognitionOnly(){
 		return mVoiceAdapter.isCancelRecognitionOnly();
 	}
 	public void setCancelRecognitionOnly(boolean set){
 		mVoiceAdapter.setCancelRecognitionOnly(set);
 	}
+	
+	public void startWakeUpListening() {
+		mVoiceAdapter.startWakeUpListening();
+	}
+
+	public void stopWakeUpListening() {
+		mVoiceAdapter.stopWakeUpListening();
+	}
+
+	public void startRecognition() {
+		mVoiceAdapter.startRecognition();
+	}
+
+	public void stopRecognition() {
+		mVoiceAdapter.stopRecognition();
+	}
+
+	public void cancelRecognition() {
+		mVoiceAdapter.cancelRecognition();
+	}
 
 	public void ttsPlay(String text, String appName, int id,
 			boolean needToNotify) {
-		FLog.v(LOG_TAG, "ttsPlay");
 		ttsPlay(text, appName, id, false, needToNotify);
 	}
 
 	public void ttsPlay(Speech text, boolean needToNotify) {
-		FLog.v(LOG_TAG, "ttsPlay ");
 		ttsPlay(text.getContent(), null, 0, needToNotify);
 	}
 
@@ -393,18 +383,17 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 
 	public void ttsClear() {
-		FLog.v(LOG_TAG, "ttsClear");
 		mTTS.clear();
 	}
 
 	public void ttsPause() {
 		// TODO Auto-generated method stub
-		FLog.v(LOG_TAG, "ttsPause");
+		
 	}
 
 	public void ttsResume() {
 		// TODO Auto-generated method stub
-		FLog.v(LOG_TAG, "ttsResume");
+		
 	}
 
 	//
@@ -419,7 +408,6 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		// 否则为识别错误重新识别，此时不需要播放提示语。但此时需判断是否需要立即开始识别
 		// 还是等错误提示播完后再开始识别
 		Speech question = a.getQuestion();
-		FLog.v(LOG_TAG, "question="+question);
 		if (question != null) {
 			playSpeech(question);
 		} else {
@@ -449,7 +437,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 			changeState(State.STATE_ERROR);
 		}
 	}
-	
+
 	@Override
 	public void onTtsEnd() {
 		Log.d(LOG_TAG, "onTtsEnd");
@@ -472,6 +460,11 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 
 		if (info.isDialog) {
 			continueDialogAfterSpeech();
+		} else {
+			// 若当前不在执行交互，则恢复唤醒监听 2015-5-12
+			if (mVoiceAdapter != null && !mVoiceAdapter.getWakeUpRecordingState()) {
+				mVoiceAdapter.startWakeUpListening();
+			}
 		}
 	};
 
@@ -490,7 +483,6 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 
 	void onStartRecording() {
-		FLog.v(LOG_TAG,"onStartRecording");
 		doSendMessage(CommonMessage.VoiceEngine.RECORDING_START, null);
 	}
 
@@ -508,7 +500,8 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_START, null);
 	}
 
-	void onFinishRecognitionError(String result) {
+	
+	void onFinishRecognitionError(String result, final ErrorType errortype) {
 		Bundle data = new Bundle();
 		data.putString("result", result);
 		doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
@@ -527,7 +520,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 					LogUtil.w(LOG_TAG, "Time is out, cancel the recognition.");
 					mVoiceAdapter.cancelRecognition();
 
-					mCurrentDialogError = ErrorType.ERR_NET;
+					mCurrentDialogError = errortype;//ErrorType.ERR_NO_MATCH_ANSWER;
 					changeState(State.STATE_ERROR);
 				}
 			};
@@ -540,6 +533,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	}
 	
 	private String mRecognitionResult = null;
+	
 	public void onFinishRecognition(String result, boolean isSemantic) {
 		LogUtil.d(LOG_TAG, "onFinishRecognition, result = " + result + ", isSemantic = " + isSemantic);
 
@@ -557,14 +551,13 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 			boolean finish = false, success = false, gotoSearch = false;
 			if (!isSemantic) {	// phonetic
 				// Send the result back to service
-//				Bundle data = new Bundle();
-//				data.putString("result", result);
-//				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
-				mRecognitionResult = result;
+				Bundle data = new Bundle();
+				data.putString("result", result);
+				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
 
 				if ( !checkCommandAnswer(result) ) {
 					LogUtil.d(LOG_TAG, "wait for the following analysed result...");
-					/*try {
+					try {
 						if (timer != null) {
 							Log.v(LOG_TAG, "cancel the pervious timer...");
 							timer.cancel();
@@ -586,16 +579,12 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 						Log.v(LOG_TAG, "schedule a new timer...");
 					} catch (IllegalStateException e) {
 						e.printStackTrace();
-					}*/
+					}
 				} else {
 					finish = true;
 					success = true;
 				}
 			} else {	// semantic
-				Bundle data = new Bundle();
-				data.putString("result", mRecognitionResult);
-				doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
-				
 				if ( !checkSemanticAnswer(result) ) {
 					mCurrentDialogError = ErrorType.ERR_NO_MATCH_ANSWER;
 					finish = true;
@@ -709,6 +698,11 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 	 */
 	private void ttsPlay(String text, String appName, int id, boolean startRecAfterPlay, boolean needToNotify) {
 		LogUtil.v(LOG_TAG, "TTS play: " + text + ", " + startRecAfterPlay);
+
+		// 播放TTS前先将唤醒服务停止，以防止TTS引起误唤醒。唤醒服务会在TTS播放完成后再恢复。2015-5-12
+		if (mVoiceAdapter != null && mVoiceAdapter.getWakeUpRecordingState()) {
+			mVoiceAdapter.stopWakeUpListening();
+		}
 
 		TtsInfo info = new TtsInfo(appName, id, text);
 		info.isDialog = startRecAfterPlay;
@@ -829,8 +823,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 		String service = json.optString("service");
 		String code = json.optString("code");
 
-		LogUtil.v(LOG_TAG, "handleProtocal service = " + service + ", code = " + code);
-		LogUtil.v(LOG_TAG, "handleProtocal json = " + json.toString());
+		LogUtil.v(LOG_TAG, "service = " + service + ", code = " + code);
 
 		// 路线和位置
 		if (service.equals("cn.yunzhisheng.map") &&
@@ -873,7 +866,6 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 				 code.equals("SEARCH_RANDOM") || code.equals("SEARCH_BILLBOARD")))
 		{
 			JSONObject obj = json.getJSONObject("semantic").getJSONObject("intent");
-			FLog.v(LOG_TAG,"music = "+obj.toString());
 			if (obj != null) {
 				r = new SemanticProtocolResult(AnswerType.MUSIC.value, new String[]{
 						obj.optString("song"),
@@ -935,8 +927,6 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 				String author = params[1];
 				String genre = params[2];
 				String result = JsonOA2.getInstance(mContext).queryAudio(name, author, genre);
-				FLog.v(LOG_TAG, "MusicSearchTask name="+name+" author="+author+" genre="+genre);
-				FLog.v(LOG_TAG, "MusicSearchTask result="+result);
 				if (result != null && !result.matches(".+errorCode.+")) {
 					try {
 						JSONObject data = new JSONObject(result);
@@ -957,9 +947,7 @@ public class VoiceEngine implements TtsSpeaker.Callback {
 						e.printStackTrace();
 					}
 				}else{
-					Bundle data = new Bundle();
-					data.putString("result", FText.NO_SONG_FOUND);
-					doSendMessage(CommonMessage.VoiceEngine.RECOGNITION_COMPLETE, data);
+					LogUtil.w(LOG_TAG, "you should fix music ");
 				}
 			}
 			return null;
