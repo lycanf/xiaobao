@@ -131,6 +131,7 @@ public class TSDLocation implements Parcelable {
 		parcel.writeDouble(Longitude);
 		parcel.writeFloat(direction);
 		parcel.writeFloat(radius);
+		parcel.writeDouble(mileage);
 	}
 
 	public float getRadius() {
@@ -170,6 +171,7 @@ public class TSDLocation implements Parcelable {
 			mBook.Longitude = source.readDouble();
 			mBook.direction = source.readFloat();
 			mBook.radius = source.readFloat();
+			mBook.mileage = source.readDouble();
 			return mBook;
 		}
 

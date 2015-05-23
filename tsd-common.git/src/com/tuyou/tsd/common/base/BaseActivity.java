@@ -4,16 +4,14 @@ package com.tuyou.tsd.common.base;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.util.Log;
 import android.view.KeyEvent;
 
 import com.tuyou.tsd.common.TSDEvent;
 
 public class BaseActivity extends Activity{
-	private final static String TAG = "BaseActivity";
+	
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		Log.v(TAG,"keycode = "+keyCode);
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_F4:
 			Intent itF1 = new Intent();

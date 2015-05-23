@@ -27,6 +27,13 @@ public interface CommonMessage {
 	//
 	// TTS
 	//
+	
+	/**
+	 * TTS 回调
+	 */
+	static final String TTS_CALL_BACK_PLAY_BEGIN = "tsd.tts.CALL_BACK_PLAY_BEGIN";
+	static final String TTS_CALL_BACK_PLAY_END = "tsd.tts.CALL_BACK_PLAY_END";
+	
 	/**
 	 * TTS播报
 	 */
