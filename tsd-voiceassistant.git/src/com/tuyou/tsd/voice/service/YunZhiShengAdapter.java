@@ -14,7 +14,6 @@ import cn.yunzhisheng.vui.wakeup.IWakeupListener;
 import cn.yunzhisheng.vui.wakeup.IWakeupOperate;
 
 import com.tuyou.tsd.common.util.LogUtil;
-import com.tuyou.tsd.voice.widget.FLog;
 
 final class YunZhiShengAdapter {
 	private static final String LOG_TAG = "YunZhiShengAdapter";
@@ -36,7 +35,11 @@ final class YunZhiShengAdapter {
 
 	private Context mContext;
 	private VoiceEngine mCallback;
+
+    long[] StartTalkPerf = {0, 0};                      //语音引擎“待监听”中间态耗时
+
 	private static YunZhiShengAdapter mInstance;
+
 	private YunZhiShengAdapter(Context context, VoiceEngine callback) {
 		mContext = context;
 		mCallback = callback;
@@ -80,10 +83,13 @@ final class YunZhiShengAdapter {
 		mRecognitionRecordingState = b;
 	}
 
+	boolean getWakeUpRecordingState() {
+		return mWakeupRecordingState;
+	}
+
 	void startWakeUpListening() {
 		LogUtil.d(LOG_TAG, "YunZhiShengAdapter.startWakeUpListening, recogRecordingState=" + mRecognitionRecordingState +
 				", mRecogState=" + mRecognitionState);
-		
 		if (mWakeupRecordingState) {
 			LogUtil.w(LOG_TAG, "wake up service already ran, ignore.");
 			return;
@@ -103,7 +109,6 @@ final class YunZhiShengAdapter {
 	}
 
 	void stopWakeUpListening() {
-		LogUtil.d(LOG_TAG, "YunZhiShengAdapter.stopWakeUpListening mWakeupRecordingState="+mWakeupRecordingState);
 		if (mWakeupRecordingState) {
 			mWakeupOperate.stopWakeup();
 		}
@@ -114,8 +119,6 @@ final class YunZhiShengAdapter {
 		if (mRecognitionRecordingState) {
 			LogUtil.w(LOG_TAG, "recognition service already ran, ignore.");
 		}
-		
-		LogUtil.d(LOG_TAG, "fq " + "mWakeupRecordingState="+mWakeupRecordingState);
 		if (!mWakeupRecordingState) {
 			// 若唤醒没在录音，则直接开始识别
 			requestStartTalk();
@@ -137,21 +140,22 @@ final class YunZhiShengAdapter {
 		mRecognizer.cancel(true);
 	}
 	
+	//add by fq
 	private boolean mCancelRecognitionOnly = false;
 	void cancelRecognition1() {
-		FLog.v(LOG_TAG, "Cancel cancelRecognition1...");
+		LogUtil.d(LOG_TAG, "Cancel cancelRecognition1...");
 		mRecognizer.cancel(true);
 		mCancelRecognitionOnly = true;
 	}
 	public boolean isCancelRecognitionOnly(){
-		FLog.v(LOG_TAG, "isCancelRecognitionOnly = "+mCancelRecognitionOnly);
+		LogUtil.d(LOG_TAG, "isCancelRecognitionOnly = "+mCancelRecognitionOnly);
 		return mCancelRecognitionOnly;
 	}
 	public void setCancelRecognitionOnly(boolean set){
-		FLog.v(LOG_TAG, "setCancelRecognitionOnly = "+set);
+		LogUtil.d(LOG_TAG, "setCancelRecognitionOnly = "+set);
 		mCancelRecognitionOnly = set;
 	}
-	
+
 	/**
 	 * 开启唤醒
 	 * @param wakeupInitDone
@@ -174,6 +178,8 @@ final class YunZhiShengAdapter {
 			command.add(VoiceAssistant.WAKE_UP_COMMAND_2);
 			command.add(VoiceAssistant.WAKE_UP_COMMAND_3);
 			mWakeupOperate.setCommandData(command);
+
+			StartTalkPerf[0] = System.currentTimeMillis();
 			mWakeupOperate.startWakeup();
 			LogUtil.d(LOG_TAG, "Start wakeup listening...");
 			return true;
@@ -190,7 +196,6 @@ final class YunZhiShengAdapter {
 		LogUtil.v(LOG_TAG, "requestStartTalk, mWakeupRecordingState = " + mWakeupRecordingState);
 		if (!mWakeupRecordingState) {
 			mRequestToStartRecog = false;
-			LogUtil.d(LOG_TAG, "fq " + "mRecognizer.start");
 			mRecognizer.start();
 			LogUtil.d(LOG_TAG, "Start to recognize...");
 		}
@@ -204,7 +209,6 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onInitDone() {
 			LogUtil.v(LOG_TAG, "IWakeupListener.onInitDone");
-			LogUtil.d(LOG_TAG, "fq " + "MyWakeUpListener onInitDone");
 			mWakeupInitDone = true;
 			mRequestToStartWakeUp = !requestStartWakeup();
 		}
@@ -247,8 +251,7 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onInitDone() {
 			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onInitDone");
-			LogUtil.d(LOG_TAG, "fq " + "MyRecognizerListener onInitDone");
-			mRecognitionInitDone = true;  
+			mRecognitionInitDone = true;
 
 //			public static final String TAG_CONTACT = "Contact"; // 联系人
 //			public static final String TAG_APPS = "Apps"; // 应用名
@@ -282,13 +285,13 @@ final class YunZhiShengAdapter {
 		@Override
 		public void onUserDataCompile() {
 			// TODO Auto-generated method stub
-			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onUserDataCompile");
+			
 		}
 
 		@Override
 		public void onUserDataCompileDone() {
 			// TODO Auto-generated method stub
-			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onUserDataCompileDone");
+			
 		}
 
 		@Override
@@ -303,7 +306,8 @@ final class YunZhiShengAdapter {
 
 		@Override
 		public void onTalkRecordingStart() {
-			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkRecordingStart");
+            StartTalkPerf[1] = System.currentTimeMillis();
+		    LogUtil.d(LOG_TAG, "YunZhiShengAdapter.java::onTalkRecordingStart=> 语音引擎待监听中间态耗时=>[" + (StartTalkPerf[1]-StartTalkPerf[0]) + "] ms.");
 			mRecognitionRecordingState = true;
 			mCallback.onStartRecording();
 		}
@@ -344,12 +348,13 @@ final class YunZhiShengAdapter {
 
 		@Override
 		public void onTalkCancel() {
-			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkCancel xxxxxxxxxxxxxxxxxxx "+mCancelRecognitionOnly);
+			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkCancel  "+mCancelRecognitionOnly);
 			if(mCancelRecognitionOnly){
-				FLog.v(LOG_TAG, "onTalkCancel **************");
+				LogUtil.v(LOG_TAG,"mCancelRecognitionOnly !!!!!!!!!!!!!!!!!");
 				requestStartWakeup();
 				return;
 			}
+			
 			mRecognitionState = false;
 			mCallback.onCancelRecognition();
 
@@ -376,8 +381,6 @@ final class YunZhiShengAdapter {
 //			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkParticalResult, result: " + arg0);
 		}
 
-		
-		//return right
 		@Override
 		public void onTalkProtocal(String protocol) {
 			LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkProtocal: " + protocol);
@@ -385,7 +388,8 @@ final class YunZhiShengAdapter {
 			if (protocol.matches(".+semantic.+")) {
 				mCallback.onFinishRecognition(protocol, true);
 			}else{
-				mCallback.onFinishRecognitionError("小宝没听懂，是不是网络有问题");
+				LogUtil.v(LOG_TAG, "IRecognizerTalkListener.onTalkProtocal: error");
+//				mCallback.onFinishRecognitionError("net work......",ErrorType.ERR_NET);
 			}
 
 			// 若有唤醒请求，则开始唤醒服务
